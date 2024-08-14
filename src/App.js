@@ -1,9 +1,14 @@
-import { useState, useEffect } from 'react';
+// src/App.js
+import React, { useState, useEffect } from 'react';
+import { Routes, Route, useNavigate } from 'react-router-dom';
+import Inventory from './inventory'; // Asegúrate de que la ruta sea correcta
 import './App.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBoxesStacked, faCalculator, faXmark, faSearch, faCheese, faCheck} from '@fortawesome/free-solid-svg-icons';
+import { faBoxesStacked, faCalculator, faXmark, faSearch, faCheese, faCheck } from '@fortawesome/free-solid-svg-icons';
 
-function App() {
+function MainPage() {
+  const navigate = useNavigate(); // Usa el hook aquí
+
   const [time, setTime] = useState('');
   const [date, setDate] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -30,7 +35,6 @@ function App() {
       if (event.key === 'F8') {
         openModal();
       }
-      
     };
 
     window.addEventListener('keydown', handleKeyDown);
@@ -53,45 +57,44 @@ function App() {
 
     return (
       <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center">
-  <div className="bg-white p-6 rounded-lg shadow-lg relative w-full max-w-md">
-    <div className="bg-footColor text-white text-center py-2 rounded-t-lg">
-      <h1 className="text-lg font-bold text-black">Cantidad de productos</h1>
-    </div>
-    <div className="px-6 py-8 space-y-4">
-      <div className="space-y-2">
-        <h2 className="text-xl font-bold">Total a cobrar</h2>
-        <p className="text-4xl font-bold text-green-500">$0.00 MXN</p>
+        <div className="bg-white p-6 rounded-lg shadow-lg relative w-full max-w-md">
+          <div className="bg-footColor text-white text-center py-2 rounded-t-lg">
+            <h1 className="text-lg font-bold text-black">Cantidad de productos</h1>
+          </div>
+          <div className="px-6 py-8 space-y-4">
+            <div className="space-y-2">
+              <h2 className="text-xl font-bold">Total a cobrar</h2>
+              <p className="text-4xl font-bold text-green-500">$0.00 MXN</p>
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-xl font-bold">El cliente pagó</h2>
+              <input type="number" className="w-full rounded-full border-2 text-black border-black bg-gray-200 p-2" />
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-xl font-bold">Cambio</h2>
+              <p className="text-4xl font-bold text-red-600">$0.00 MXN</p>
+            </div>
+            <div className="mt-8 flex justify-between">
+              <button
+                className="px-4 py-2 bg-white text-black rounded-full border-red-600 border-2 transition-transform duration-300 ease-in-out transform hover:bg-red-400 hover:scale-105"
+                onClick={onClose}
+              >
+                Cancelar
+                <FontAwesomeIcon icon={faXmark} className="ml-2 text-xl font-bold" />
+              </button>
+              <button
+                className="px-4 py-2 bg-white text-black rounded-full border-green-500 border-2 transition-transform duration-300 ease-in-out transform hover:bg-green-300 hover:scale-105"
+                onClick={() => {
+                  onClose();
+                }}
+              >
+                F8 - Confirmar
+                <FontAwesomeIcon icon={faCheck} className="ml-2 text-xl font-bold" />
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
-      <div className="space-y-2">
-        <h2 className="text-xl font-bold">El cliente pagó</h2>
-        <input type="number" className="w-full rounded-full border-2 text-black border-black bg-gray-200 p-2" />
-      </div>
-      <div className="space-y-2">
-        <h2 className="text-xl font-bold">Cambio</h2>
-        <p className="text-4xl font-bold text-red-600">$0.00 MXN</p>
-      </div>
-      <div className="mt-8 flex justify-between">
-        <button
-          className="px-4 py-2 bg-white text-black rounded-full border-red-600 border-2 transition-transform duration-300 ease-in-out transform hover:bg-red-400 hover:scale-105"
-          onClick={onClose}
-        >
-          Cancelar
-          <FontAwesomeIcon icon={faXmark} className="ml-2 text-xl font-bold" />
-        </button>
-        <button
-          className="px-4 py-2 bg-white text-black rounded-full border-green-500 border-2 transition-transform duration-300 ease-in-out transform hover:bg-green-300 hover:scale-105"
-          onClick={() => {
-            onClose();
-          }}
-        >
-          F8 - Confirmar
-          <FontAwesomeIcon icon={faCheck} className="ml-2 text-xl font-bold" />
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-
     );
   };
 
@@ -105,7 +108,10 @@ function App() {
       </header>
 
       <div className="bg-greyColor2 flex justify-center items-center space-x-8 p-4">
-        <button className="border-2 border-black rounded-full px-3 py-1 text-black hover:bg-gray-200 transition duration-300">
+        <button 
+          className="border-2 border-black rounded-full px-3 py-1 text-black hover:bg-gray-200 transition duration-300"
+          onClick={() => navigate('/inventory')}
+        >
           Inventario productos
           <FontAwesomeIcon icon={faBoxesStacked} className="ml-3 text-lg" />
         </button>
@@ -131,7 +137,7 @@ function App() {
             type="number" 
             className="border border-black rounded-lg p-2 ml-4 w-20" 
           />
-           <FontAwesomeIcon icon={faCheese} className="ml-2 text-2xl" />
+          <FontAwesomeIcon icon={faCheese} className="ml-2 text-2xl" />
         </div>
       </div>
 
@@ -179,9 +185,17 @@ function App() {
         </div>
       </footer>
 
-      {/* Modal */}
       <Modal isOpen={isModalOpen} onClose={closeModal} />
     </div>
+  );
+}
+
+function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<MainPage />} />
+      <Route path="/inventory" element={<Inventory />} />
+    </Routes>
   );
 }
 
