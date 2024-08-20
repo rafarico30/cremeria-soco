@@ -1,13 +1,13 @@
-// src/App.js
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
-import Inventory from './inventory'; // Asegúrate de que la ruta sea correcta
+import Inventory from './inventory'; 
+import List from './List';
 import './App.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBoxesStacked, faCalculator, faXmark, faSearch, faCheese, faCheck } from '@fortawesome/free-solid-svg-icons';
 
 function MainPage() {
-  const navigate = useNavigate(); // Usa el hook aquí
+  const navigate = useNavigate(); 
 
   const [time, setTime] = useState('');
   const [date, setDate] = useState('');
@@ -195,6 +195,7 @@ function App() {
     <Routes>
       <Route path="/" element={<MainPage />} />
       <Route path="/inventory" element={<Inventory />} />
+      <Route path="/list" element={<List/>} />
     </Routes>
   );
 }
