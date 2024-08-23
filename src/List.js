@@ -4,13 +4,28 @@ import Inventory from './inventory';
 import List from './List';
 import './App.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faHome, faCirclePlus, faPeopleCarryBox, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
+import { faHome, faCirclePlus, faPeopleCarryBox, faMagnifyingGlass, faPen, faTrash} from '@fortawesome/free-solid-svg-icons';
+import axios from 'axios';
 
 function HomePage() {
+  const [products, setProducts] = useState([]);
   const navigate = useNavigate();
   const [time, setTime] = useState('');
   const [date, setDate] = useState('');
-  const [isModalOpen, setIsModalOpen] = useState(false); // Estado para el modal
+  const [isModalOpen, setIsModalOpen] = useState(false); 
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/api/products'); 
+        setProducts(response.data);
+      } catch (error) {
+        console.error('Error al obtener los productos', error);
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -28,6 +43,8 @@ function HomePage() {
     const formattedDate = now.toLocaleDateString('es-ES', options);
     setDate(formattedDate);
   }, []);
+
+  
 
   const openModal = () => {
     setIsModalOpen(true);
@@ -72,7 +89,7 @@ function HomePage() {
       </div>
 
       <div className='bg-white h-screen'>
-        <table className='min-w-full text-lg'>
+        <table className='min-w-full text-m'>
           <thead>
             <tr>
               <th className='border border-black px-4 py-2 text-left'>Clave</th>
@@ -83,6 +100,27 @@ function HomePage() {
               <th className='border border-black px-4 py-2 text-left'></th>
             </tr>
           </thead>
+          <tbody>
+            {products.map((product) => (
+              <tr key={product._id}>
+                <td className='border border-black px-4 py-2'>{product.id}</td>
+                <td className='border border-black px-4 py-2'>{product.nombre}</td>
+                <td className='border border-black px-4 py-2'>{product.descripcion}</td>
+                <td className='border border-black px-4 py-2'>${product.precio}</td>
+                <td className={`border border-black px-4 py-2 ${product.stock === 0 ? 'text-red-500 font-bold' : ''}`}>
+              {product.stock}
+            </td>
+                <td className='border border-black px-4 py-2'>
+                  <button className='transition-all duration-300 hover:scale-110'>
+                  <FontAwesomeIcon icon={faPen} className="mr-2 text-2xl font-bold" />
+                  </button>
+                  <button className='transition-all duration-300 hover:scale-110'>
+                  <FontAwesomeIcon icon={faTrash} className="ml-3 text-2xl font-bold" />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
         </table>
       </div>
 
