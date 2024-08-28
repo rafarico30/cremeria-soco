@@ -7,11 +7,20 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBoxesStacked, faCalculator, faXmark, faSearch, faCheese, faCheck } from '@fortawesome/free-solid-svg-icons';
 
 function MainPage() {
+  
   const navigate = useNavigate(); 
 
+  
   const [time, setTime] = useState('');
   const [date, setDate] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [cantidad, setCantidad] = useState(1);
+  const handleCantidadChange = (e) => {
+    const value = Number(e.target.value);
+    if (value > 0) { 
+      setCantidad(value);
+    }
+  };
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -55,6 +64,7 @@ function MainPage() {
   const Modal = ({ isOpen, onClose }) => {
     if (!isOpen) return null;
 
+    
     return (
       <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center">
         <div className="bg-white p-6 rounded-lg shadow-lg relative w-full max-w-md">
@@ -132,13 +142,15 @@ function MainPage() {
         <FontAwesomeIcon icon={faSearch} className="ml-2 text-2xl" />
         
         <div className="flex items-center ml-6">
-          <h2 className="font-bold">Cantidad:</h2>
+         <h2 className="font-bold">Cantidad:</h2>
           <input 
-            type="number" 
-            className="border border-black rounded-lg p-2 ml-4 w-20" 
-          />
-          <FontAwesomeIcon icon={faCheese} className="ml-2 text-2xl" />
-        </div>
+          type="number" 
+          className="border border-black rounded-lg p-2 ml-4 w-20"
+          value={cantidad}
+          onChange={handleCantidadChange}/>  
+
+    <FontAwesomeIcon icon={faCheese} className="ml-2 text-2xl" />
+  </div>
       </div>
 
       <div className="flex-grow bg-white">
@@ -178,6 +190,8 @@ function MainPage() {
           </div>
         </div>
       </div>
+
+      
 
       <footer className="bg-footColor p-4">
         <div className="text-right font-bold text-black text-lg">

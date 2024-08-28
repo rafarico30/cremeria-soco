@@ -8,11 +8,17 @@ import { faHome, faCirclePlus, faPeopleCarryBox, faMagnifyingGlass, faPen, faTra
 import axios from 'axios';
 
 function HomePage() {
+  const [searchTerm, setSearchTerm] = useState('');
   const [products, setProducts] = useState([]);
   const navigate = useNavigate();
   const [time, setTime] = useState('');
   const [date, setDate] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false); 
+  const filteredProducts = products.filter((product) =>
+    product.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    product.id.toString().toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -83,7 +89,11 @@ function HomePage() {
           <div className='flex items-center space-x-4'>
             <FontAwesomeIcon icon={faMagnifyingGlass} className="text-3xl font-bold" />
             <p className='font-semibold text-2xl'>Buscar</p>
-            <input type="text" className='bg-greyColor rounded-md px-4 py-2' />
+            <input 
+              type="text" 
+              className='bg-greyColor rounded-md px-4 py-2' 
+              value={searchTerm} 
+              onChange={(e) => setSearchTerm(e.target.value)} />
           </div>
         </div>
       </div>
@@ -101,26 +111,27 @@ function HomePage() {
             </tr>
           </thead>
           <tbody>
-            {products.map((product) => (
-              <tr key={product._id}>
-                <td className='border border-black px-4 py-2'>{product.id}</td>
-                <td className='border border-black px-4 py-2'>{product.nombre}</td>
-                <td className='border border-black px-4 py-2'>{product.descripcion}</td>
-                <td className='border border-black px-4 py-2'>${product.precio}</td>
-                <td className={`border border-black px-4 py-2 ${product.stock === 0 ? 'text-red-500 font-bold' : ''}`}>
-              {product.stock}
-            </td>
-                <td className='border border-black px-4 py-2'>
-                  <button className='transition-all duration-300 hover:scale-110'>
-                  <FontAwesomeIcon icon={faPen} className="mr-2 text-2xl font-bold" />
-                  </button>
-                  <button className='transition-all duration-300 hover:scale-110'>
-                  <FontAwesomeIcon icon={faTrash} className="ml-3 text-2xl font-bold" />
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
+       {filteredProducts.map((product) => (
+      <tr key={product._id}>
+      <td className='border border-black px-4 py-2'>{product.id}</td>
+      <td className='border border-black px-4 py-2'>{product.nombre}</td>
+      <td className='border border-black px-4 py-2'>{product.descripcion}</td>
+      <td className='border border-black px-4 py-2'>${product.precio}</td>
+      <td className={`border border-black px-4 py-2 ${product.stock === 0 ? 'text-red-500 font-bold' : ''}`}>
+        {product.stock}
+      </td>
+      <td className='border border-black px-4 py-2'>
+        <button className='transition-all duration-300 hover:scale-110'>
+          <FontAwesomeIcon icon={faPen} className="mr-2 text-2xl font-bold" />
+        </button>
+        <button className='transition-all duration-300 hover:scale-110'>
+          <FontAwesomeIcon icon={faTrash} className="ml-3 text-2xl font-bold" />
+        </button>
+      </td>
+    </tr>
+  ))}
+</tbody>
+
         </table>
       </div>
 
