@@ -3,6 +3,7 @@ import { Routes, Route, useNavigate } from 'react-router-dom';
 import Inventory from './inventory'; 
 import List from './List';
 import './App.css';
+import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBoxesStacked, faCalculator, faXmark, faSearch, faCheese, faCheck } from '@fortawesome/free-solid-svg-icons';
 
@@ -10,17 +11,59 @@ function MainPage() {
   
   const navigate = useNavigate(); 
 
-  
   const [time, setTime] = useState('');
   const [date, setDate] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [cantidad, setCantidad] = useState(1);
+  const [searchTerm, setSearchTerm] = useState(''); // Estado para el término de búsqueda
+  const [products, setProducts] = useState([]); // Estado para los productos
+  const [filteredProducts, setFilteredProducts] = useState([]); // Productos filtrados para mostrar en la búsqueda
+  const [selectedProducts, setSelectedProducts] = useState([]); // Productos seleccionados para agregar a la tabla
+  const [showSearchResults, setShowSearchResults] = useState(false); // Controlar visibilidad del cuadro de búsqueda
+
+  const handleSearchChange = (e) => {
+    const term = e.target.value;
+    setSearchTerm(term);
+    setShowSearchResults(term.trim() !== '');
+
+    if (term.trim() !== '') {
+      const filtered = products.filter(product =>
+        product.nombre.toLowerCase().includes(term.toLowerCase()) ||
+        product.id.toString().toLowerCase().includes(term.toLowerCase())
+      );
+      setFilteredProducts(filtered);
+    } else {
+      setFilteredProducts([]);
+    }
+  };
+
   const handleCantidadChange = (e) => {
     const value = Number(e.target.value);
     if (value > 0) { 
       setCantidad(value);
     }
   };
+
+  const handleProductSelect = (product) => {
+    setSelectedProducts(prevProducts => [...prevProducts, product]);
+    setSearchTerm(''); // Limpiar el término de búsqueda
+    setShowSearchResults(false); // Ocultar el cuadro de búsqueda
+  };
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/api/products', {
+          params: { searchTerm }
+        });
+        setProducts(response.data);
+      } catch (error) {
+        console.error('Error al obtener los productos', error);
+      }
+    };
+
+    fetchProducts();
+  }, [searchTerm]); 
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -108,6 +151,7 @@ function MainPage() {
     );
   };
 
+
   return (
     <div className="App flex flex-col h-screen">
       <header className="bg-greyColor p-4">
@@ -132,25 +176,45 @@ function MainPage() {
         </button>
       </div>
 
-      <div className="bg-white border border-black p-4 flex items-center">
+      <div className="bg-white border border-black p-4 flex items-center relative">
         <h2 className="font-bold ml-6">Nombre del producto:</h2>
-        <input 
-          type="text" 
-          className="border border-black rounded-lg p-2 ml-4 w-1/5"
-          placeholder="Buscar producto..."
-        />
-        <FontAwesomeIcon icon={faSearch} className="ml-2 text-2xl" />
+        <div className="relative">
+          <input 
+            type="text" 
+            className="border border-black rounded-lg p-2 ml-4 w-1/5"
+            placeholder="Buscar producto..."
+            value={searchTerm}
+            onChange={handleSearchChange}
+          />
+          <FontAwesomeIcon icon={faSearch} className="ml-2 text-2xl" />
+
+          {/* Mostrar opciones de búsqueda si `showSearchResults` es true */}
+          {showSearchResults && filteredProducts.length > 0 && (
+            <div className="absolute z-10 bg-white border border-gray-300 rounded-lg shadow-lg mt-1 w-full max-h-60 overflow-auto">
+              {filteredProducts.map(product => (
+                <div
+                  key={product.id}
+                  className="p-2 cursor-pointer hover:bg-gray-200"
+                  onClick={() => handleProductSelect(product)}
+                >
+                  {product.nombre} - ${product.precio} MXN
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
         
         <div className="flex items-center ml-6">
-         <h2 className="font-bold">Cantidad:</h2>
+          <h2 className="font-bold">Cantidad:</h2>
           <input 
-          type="number" 
-          className="border border-black rounded-lg p-2 ml-4 w-20"
-          value={cantidad}
-          onChange={handleCantidadChange}/>  
+            type="number" 
+            className="border border-black rounded-lg p-2 ml-4 w-20"
+            value={cantidad}
+            onChange={handleCantidadChange} 
+          />  
 
-    <FontAwesomeIcon icon={faCheese} className="ml-2 text-2xl" />
-  </div>
+          <FontAwesomeIcon icon={faCheese} className="ml-2 text-2xl" />
+        </div>
       </div>
 
       <div className="flex-grow bg-white">
@@ -159,48 +223,38 @@ function MainPage() {
             <thead>
               <tr className="bg-footColor">
                 <th className="border border-black p-2">Clave</th>
-                <th className="border border-black p-2">Nombre del producto</th>
+                <th className="border border-black p-2">Nombre</th>
+                <th className="border border-black p-2">Precio</th>
                 <th className="border border-black p-2">Cantidad</th>
-                <th className="border border-black p-2">Precio unitario</th>
+                <th className="border border-black p-2">Subtotal</th>
               </tr>
             </thead>
             <tbody>
-              {/* Aquí puedes agregar filas de datos */}
+              {selectedProducts.map((product, index) => (
+                <tr key={index}>
+                  <td className="border border-black p-2">{product.id}</td>
+                  <td className="border border-black p-2">{product.nombre}</td>
+                  <td className="border border-black p-2">{product.precio}</td>
+                  <td className="border border-black p-2">{cantidad}</td>
+                  <td className="border border-black p-2">{(product.precio * cantidad).toFixed(2)}</td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
       </div>
 
-      <div className="bg-greyColor p-4 flex justify-around space-x-20">
-        <button className="border-2 border-redColor rounded-full px-5 bg-redColor text-black font-bold hover:bg-red-400 hover:border-red-400 transition duration-300">
-          Cancelar venta
-          <FontAwesomeIcon icon={faXmark} className="ml-2 text-xl font-bold" />
-        </button>
-
-        <div className="flex items-center space-x-4">
-          <button
-            className="border-2 border-redColor rounded-lg px-5 py-2 bg-redColor text-black font-extrabold text-xl hover:bg-red-400 hover:border-red-400 transition duration-300"
-            onClick={openModal}
-          >
-            F8 - Cobrar
-          </button>
-
-          <div className="border border-priceColor rounded-xl p-4 bg-priceColor">
-            <p className="font-extrabold text-black text-2xl">$0.00 MXN</p>
-          </div>
-        </div>
-      </div>
-
-      
+      <div className="bg-greyColor p-4 flex justify-end space-x-20"></div>
 
       <footer className="bg-footColor p-4">
         <div className="text-right font-bold text-black text-lg">
           {time}
         </div>
       </footer>
-
       <Modal isOpen={isModalOpen} onClose={closeModal} />
     </div>
+
+    
   );
 }
 

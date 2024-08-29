@@ -10,6 +10,6 @@ const ProductSchema = new mongoose.Schema({
   stock: { type: Number, required: true },
   ventaPorPieza: { type: Boolean, required: true },
   categoria: { type: String, required: true },
-}, { collection: 'productos' }); // Asegúrate de que el nombre de la colección sea correcto
+}, { collection: 'productos' }); 
 
 module.exports = mongoose.model('Product', ProductSchema);
