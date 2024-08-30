@@ -20,7 +20,30 @@ function MainPage() {
   const [filteredProducts, setFilteredProducts] = useState([]); // Productos filtrados para mostrar en la búsqueda
   const [selectedProducts, setSelectedProducts] = useState([]); // Productos seleccionados para agregar a la tabla
   const [showSearchResults, setShowSearchResults] = useState(false); // Controlar visibilidad del cuadro de búsqueda
+  const [pagoCliente, setPagoCliente] = useState(0);
+  const total = selectedProducts.reduce((acc, product) => acc + product.precio * product.cantidad, 0);
+  const [cambio, setCambio] = useState(0);
 
+  const handleEditCantidad = (index, newCantidad) => {
+    const updatedProducts = [...selectedProducts];
+    const cantidad = Number(newCantidad);
+    if (cantidad > 0) { // Solo permitir valores positivos
+      updatedProducts[index].cantidad = cantidad;
+      setSelectedProducts(updatedProducts);
+    }
+  };
+
+  const handleCancelSale = () => {
+    const confirmCancel = window.confirm("¿Estás seguro de que deseas cancelar la venta?");
+  
+    if (confirmCancel) {
+      setSelectedProducts([]); // Vaciar la lista de productos seleccionados
+      setPagoCliente(0); // Restablecer el pago del cliente
+      setCambio(0); // Restablecer el cambio
+    }
+  };
+  
+  
   const handleSearchChange = (e) => {
     const term = e.target.value;
     setSearchTerm(term);
@@ -44,11 +67,32 @@ function MainPage() {
     }
   };
 
-  const handleProductSelect = (product) => {
-    setSelectedProducts(prevProducts => [...prevProducts, product]);
-    setSearchTerm(''); // Limpiar el término de búsqueda
-    setShowSearchResults(false); // Ocultar el cuadro de búsqueda
+  useEffect(() => {
+    if (pagoCliente >= total) {
+      setCambio(pagoCliente - total);
+    } else {
+      setCambio(0);
+    }
+  }, [pagoCliente, total]);
+  
+  const handlePagoClienteChange = (e) => {
+    const value = e.target.value;
+    if (!isNaN(value) && value.trim() !== '') {
+      setPagoCliente(Number(value));
+    } else {
+      setPagoCliente(0);
+    }
   };
+  
+
+  const handleProductSelect = (product) => {
+    const productWithQuantity = { ...product, cantidad: cantidad };
+    setSelectedProducts(prevProducts => [...prevProducts, productWithQuantity]);
+    setSearchTerm(''); 
+    setShowSearchResults(false); 
+    setCantidad(1); 
+  };
+  
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -115,37 +159,36 @@ function MainPage() {
             <h1 className="text-lg font-bold text-black">Cantidad de productos</h1>
           </div>
           <div className="px-6 py-8 space-y-4">
-            <div className="space-y-2">
-              <h2 className="text-xl font-bold">Total a cobrar</h2>
-              <p className="text-4xl font-bold text-green-500">$0.00 MXN</p>
-            </div>
-            <div className="space-y-2">
-              <h2 className="text-xl font-bold">El cliente pagó</h2>
-              <input type="number" className="w-full rounded-full border-2 text-black border-black bg-gray-200 p-2" />
-            </div>
-            <div className="space-y-2">
-              <h2 className="text-xl font-bold">Cambio</h2>
-              <p className="text-4xl font-bold text-red-600">$0.00 MXN</p>
-            </div>
-            <div className="mt-8 flex justify-between">
-              <button
-                className="px-4 py-2 bg-white text-black rounded-full border-red-600 border-2 transition-transform duration-300 ease-in-out transform hover:bg-red-400 hover:scale-105"
-                onClick={onClose}
-              >
-                Cancelar
-                <FontAwesomeIcon icon={faXmark} className="ml-2 text-xl font-bold" />
-              </button>
-              <button
-                className="px-4 py-2 bg-white text-black rounded-full border-green-500 border-2 transition-transform duration-300 ease-in-out transform hover:bg-green-300 hover:scale-105"
-                onClick={() => {
-                  onClose();
-                }}
-              >
-                F8 - Confirmar
-                <FontAwesomeIcon icon={faCheck} className="ml-2 text-xl font-bold" />
-              </button>
-            </div>
-          </div>
+    <div className="space-y-2">
+      <h2 className="text-xl font-bold">Total a cobrar</h2>
+      <p className="text-4xl font-bold text-green-500">${total.toFixed(2)} MXN</p>
+      <h2 className="text-xl font-bold">El cliente pagó</h2>
+      <input
+        type="text"
+        className="w-full rounded-full border-2 text-black border-black bg-gray-200 p-2"
+        value={pagoCliente}
+        onChange={handlePagoClienteChange}
+      />
+      <h2 className="text-xl font-bold">Cambio</h2>
+      <p className="text-4xl font-bold text-red-600">${cambio.toFixed(2)} MXN</p>
+    </div>
+    <div className="mt-8 flex justify-between">
+      <button
+        className="px-4 py-2 bg-white text-black rounded-full border-red-600 border-2 transition-transform duration-300 ease-in-out transform hover:bg-red-400 hover:scale-105"
+        onClick={onClose}
+      >
+        Cancelar
+        <FontAwesomeIcon icon={faXmark} className="ml-2 text-xl font-bold" />
+      </button>
+      <button
+        className="px-4 py-2 bg-white text-black rounded-full border-green-500 border-2 transition-transform duration-300 ease-in-out transform hover:bg-green-300 hover:scale-105"
+        onClick={onClose}
+      >
+        F8 - Confirmar
+        <FontAwesomeIcon icon={faCheck} className="ml-2 text-xl font-bold" />
+      </button>
+    </div>
+  </div>
         </div>
       </div>
     );
@@ -181,16 +224,15 @@ function MainPage() {
         <div className="relative">
           <input 
             type="text" 
-            className="border border-black rounded-lg p-2 ml-4 w-1/5"
+            className="border border-black rounded-lg p-2 ml-4"
             placeholder="Buscar producto..."
             value={searchTerm}
             onChange={handleSearchChange}
           />
           <FontAwesomeIcon icon={faSearch} className="ml-2 text-2xl" />
 
-          {/* Mostrar opciones de búsqueda si `showSearchResults` es true */}
           {showSearchResults && filteredProducts.length > 0 && (
-            <div className="absolute z-10 bg-white border border-gray-300 rounded-lg shadow-lg mt-1 w-full max-h-60 overflow-auto">
+            <div className="absolute z-10 bg-white border border-gray-300 rounded-lg shadow-lg mt-1 max-h-60 overflow-auto">
               {filteredProducts.map(product => (
                 <div
                   key={product.id}
@@ -229,34 +271,73 @@ function MainPage() {
                 <th className="border border-black p-2">Subtotal</th>
               </tr>
             </thead>
-            <tbody>
-              {selectedProducts.map((product, index) => (
-                <tr key={index}>
-                  <td className="border border-black p-2">{product.id}</td>
-                  <td className="border border-black p-2">{product.nombre}</td>
-                  <td className="border border-black p-2">{product.precio}</td>
-                  <td className="border border-black p-2">{cantidad}</td>
-                  <td className="border border-black p-2">{(product.precio * cantidad).toFixed(2)}</td>
-                </tr>
-              ))}
-            </tbody>
+          <tbody>
+            {selectedProducts.map((product, index) => (
+         <tr key={index}>
+      <td className="border border-black p-2">{product.id}</td>
+      <td className="border border-black p-2">{product.nombre}</td>
+      <td className="border border-black p-2">${product.precio}</td>
+      
+      {/* Input para editar la cantidad */}
+      <td className="border border-black p-2">
+        <input
+          type="number"
+          className="rounded-lg p-1 w-20"
+          value={product.cantidad}
+          onChange={(e) => handleEditCantidad(index, e.target.value)}
+          min="1"
+        />
+      </td>
+      
+      <td className="border border-black p-2">
+        ${(product.precio * product.cantidad).toFixed(2)}
+      </td>
+    </tr>
+  ))}
+</tbody>
+
+
           </table>
         </div>
       </div>
 
-      <div className="bg-greyColor p-4 flex justify-end space-x-20"></div>
+      
+      <div className="bg-greyColor p-4 flex justify-around space-x-20">
+      <button
+        className="border-2 border-redColor rounded-full px-5 bg-redColor text-black font-bold hover:bg-red-400 hover:border-red-400 transition duration-300"
+        onClick={handleCancelSale} // Asignar la función aquí
+      >
+        Cancelar venta
+        <FontAwesomeIcon icon={faXmark} className="ml-2 text-xl font-bold" />
+      </button>
+        <div className="flex items-center space-x-4">
+          <button
+            className="border-2 border-redColor rounded-lg px-5 py-2 bg-redColor text-black font-extrabold text-xl hover:bg-red-400 hover:border-red-400 transition duration-300"
+            onClick={openModal}
+          >
+            F8 - Cobrar
+          </button>
+
+          <div className="border border-priceColor rounded-xl p-4 bg-priceColor">
+           <p className="font-extrabold text-black text-2xl">${total.toFixed(2)} MXN</p>
+          </div>
+
+        </div>
+      </div>
 
       <footer className="bg-footColor p-4">
         <div className="text-right font-bold text-black text-lg">
           {time}
         </div>
       </footer>
-      <Modal isOpen={isModalOpen} onClose={closeModal} />
-    </div>
 
-    
+  
+  <Modal isOpen={isModalOpen} onClose={closeModal} />
+    </div>
   );
 }
+    
+
 
 function App() {
   return (
