@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, useNavigate } from 'react-router-dom';
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom'; // Importar useLocation
 import Inventory from './inventory';
 import List from './List';
 import './App.css';
@@ -8,22 +8,28 @@ import { faHome, faCirclePlus, faPeopleCarryBox, faMagnifyingGlass, faPen, faTra
 import axios from 'axios';
 
 function HomePage() {
-  const [searchTerm, setSearchTerm] = useState('');
   const [products, setProducts] = useState([]);
+  const [category, setCategory] = useState('');
+  const location = useLocation(); // Para acceder a la información de la URL
+  const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
   const [time, setTime] = useState('');
   const [date, setDate] = useState('');
-  const [isModalOpen, setIsModalOpen] = useState(false); 
-  const filteredProducts = products.filter((product) =>
-    product.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.id.toString().toLowerCase().includes(searchTerm.toLowerCase())
-  );
-  
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const filteredProducts = category
+    ? products.filter(product => product.categoria.toLowerCase() === category.toLowerCase())
+    : products;
 
   useEffect(() => {
+    // Obtener la categoría de la URL
+    const queryParams = new URLSearchParams(location.search);
+    const categoryFromParams = queryParams.get('category');
+    setCategory(categoryFromParams || '');
+
     const fetchProducts = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/products'); 
+        const response = await axios.get('http://localhost:5000/api/products');
         setProducts(response.data);
       } catch (error) {
         console.error('Error al obtener los productos', error);
@@ -31,7 +37,7 @@ function HomePage() {
     };
 
     fetchProducts();
-  }, []);
+  }, [location.search]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -49,8 +55,6 @@ function HomePage() {
     const formattedDate = now.toLocaleDateString('es-ES', options);
     setDate(formattedDate);
   }, []);
-
-  
 
   const openModal = () => {
     setIsModalOpen(true);
@@ -111,27 +115,32 @@ function HomePage() {
             </tr>
           </thead>
           <tbody>
-       {filteredProducts.map((product) => (
-      <tr key={product._id}>
-      <td className='border border-black px-4 py-2'>{product.id}</td>
-      <td className='border border-black px-4 py-2'>{product.nombre}</td>
-      <td className='border border-black px-4 py-2'>{product.descripcion}</td>
-      <td className='border border-black px-4 py-2'>${product.precio}</td>
-      <td className={`border border-black px-4 py-2 ${product.stock === 0 ? 'text-red-500 font-bold' : ''}`}>
-        {product.stock}
-      </td>
-      <td className='border border-black px-4 py-2'>
-        <button className='transition-all duration-300 hover:scale-110'>
-          <FontAwesomeIcon icon={faPen} className="mr-2 text-2xl font-bold" />
-        </button>
-        <button className='transition-all duration-300 hover:scale-110'>
-          <FontAwesomeIcon icon={faTrash} className="ml-3 text-2xl font-bold" />
-        </button>
-      </td>
-    </tr>
-  ))}
-</tbody>
-
+            {filteredProducts.length > 0 ? (
+              filteredProducts.map((product) => (
+                <tr key={product._id}>
+                  <td className='border border-black px-4 py-2'>{product.id}</td>
+                  <td className='border border-black px-4 py-2'>{product.nombre}</td>
+                  <td className='border border-black px-4 py-2'>{product.descripcion}</td>
+                  <td className='border border-black px-4 py-2'>${product.precio}</td>
+                  <td className={`border border-black px-4 py-2 ${product.stock === 0 ? 'text-red-500 font-bold' : ''}`}>
+                    {product.stock}
+                  </td>
+                          <td className='border border-black px-4 py-2'>
+                <button className='transition-all duration-300 hover:scale-110'>
+                  <FontAwesomeIcon icon={faPen} className="mr-2 text-2xl font-bold" />
+                </button>
+                <button className='transition-all duration-300 hover:scale-110'>
+                  <FontAwesomeIcon icon={faTrash} className="ml-3 text-2xl font-bold" />
+                </button>
+               </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="6" className="text-center py-4">No hay productos para mostrar</td>
+              </tr>
+            )}
+          </tbody>
         </table>
       </div>
 
@@ -151,7 +160,6 @@ function HomePage() {
         </div>
       </footer>
 
-      
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-white p-8 rounded-lg shadow-lg w-1/2">
@@ -223,7 +231,8 @@ function HomePage() {
             </form>
           </div>
         </div>
-      )}</div>
+      )}
+    </div>
   );
 }
 

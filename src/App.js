@@ -15,6 +15,7 @@ function MainPage() {
   const [date, setDate] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [cantidad, setCantidad] = useState(1);
+  const [selectedIndex, setSelectedIndex] = useState(-1);   
   const [searchTerm, setSearchTerm] = useState(''); // Estado para el término de búsqueda
   const [products, setProducts] = useState([]); // Estado para los productos
   const [filteredProducts, setFilteredProducts] = useState([]); // Productos filtrados para mostrar en la búsqueda
@@ -24,15 +25,25 @@ function MainPage() {
   const total = selectedProducts.reduce((acc, product) => acc + product.precio * product.cantidad, 0);
   const [cambio, setCambio] = useState(0);
 
-  const handleEditCantidad = (index, newCantidad) => {
+  const handleRemoveProduct = (index) => {
     const updatedProducts = [...selectedProducts];
+    updatedProducts.splice(index, 1); // Eliminar el producto del array
+    setSelectedProducts(updatedProducts); // Actualizar el estado
+  };
+  
+
+  const handleEditCantidad = (index, newCantidad) => {
     const cantidad = Number(newCantidad);
-    if (cantidad > 0) { // Solo permitir valores positivos
+    const product = selectedProducts[index];
+    const isDecimalAllowed = !product.ventaPorPieza;
+  
+    if (cantidad > 0 && (isDecimalAllowed || Number.isInteger(cantidad))) {
+      const updatedProducts = [...selectedProducts];
       updatedProducts[index].cantidad = cantidad;
       setSelectedProducts(updatedProducts);
     }
   };
-
+  
   const handleCancelSale = () => {
     const confirmCancel = window.confirm("¿Estás seguro de que deseas cancelar la venta?");
   
@@ -42,7 +53,22 @@ function MainPage() {
       setCambio(0); // Restablecer el cambio
     }
   };
-  
+
+  const handleKeyDown = (e) => {
+    if (showSearchResults && filteredProducts.length > 0) {
+      if (e.key === 'ArrowDown') {
+        setSelectedIndex((prevIndex) => 
+          prevIndex < filteredProducts.length - 1 ? prevIndex + 1 : 0
+        );
+      } else if (e.key === 'ArrowUp') {
+        setSelectedIndex((prevIndex) => 
+          prevIndex > 0 ? prevIndex - 1 : filteredProducts.length - 1
+        );
+      } else if (e.key === 'Enter' && selectedIndex >= 0) {
+        handleProductSelect(filteredProducts[selectedIndex]);
+      }
+    }
+  };
   
   const handleSearchChange = (e) => {
     const term = e.target.value;
@@ -61,9 +87,17 @@ function MainPage() {
   };
 
   const handleCantidadChange = (e) => {
-    const value = Number(e.target.value);
-    if (value > 0) { 
-      setCantidad(value);
+    const value = e.target.value;
+    const isDecimalAllowed = selectedProducts.length > 0 ? !selectedProducts[0].ventaPorPieza : false; // Suponiendo que `ventaPorPieza` es el mismo para todos los productos seleccionados
+  
+    if (isDecimalAllowed) {
+      if (value >= 0) {
+        setCantidad(value);
+      }
+    } else {
+      if (Number.isInteger(Number(value)) && value >= 0) {
+        setCantidad(value);
+      }
     }
   };
 
@@ -85,14 +119,41 @@ function MainPage() {
   };
   
 
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [filteredProducts, selectedIndex]);
+
+  
   const handleProductSelect = (product) => {
-    const productWithQuantity = { ...product, cantidad: cantidad };
-    setSelectedProducts(prevProducts => [...prevProducts, productWithQuantity]);
-    setSearchTerm(''); 
-    setShowSearchResults(false); 
-    setCantidad(1); 
+    const existingProductIndex = selectedProducts.findIndex(p => p.id === product.id);
+    const isDecimalAllowed = !product.ventaPorPieza;
+  
+    if (existingProductIndex !== -1) {
+      const updatedProducts = [...selectedProducts];
+      const currentProduct = updatedProducts[existingProductIndex];
+  
+      if (isDecimalAllowed || Number.isInteger(currentProduct.cantidad + cantidad)) {
+        currentProduct.cantidad += cantidad;
+        setSelectedProducts(updatedProducts);
+      }
+    } else {
+      if (isDecimalAllowed || Number.isInteger(cantidad)) {
+        const productWithQuantity = { ...product, cantidad: cantidad };
+        setSelectedProducts(prevProducts => [...prevProducts, productWithQuantity]);
+      }
+    }
+  
+    setSearchTerm('');
+    setShowSearchResults(false);
+    setCantidad(product.ventaPorPieza ? 1 : 1.0);
+    setSelectedIndex(-1);
   };
   
+  
+
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -130,15 +191,17 @@ function MainPage() {
     const handleKeyDown = (event) => {
       if (event.key === 'F8') {
         openModal();
+      } else if (event.key === 'Enter' && isModalOpen) {
+        closeModal();
       }
     };
-
+  
     window.addEventListener('keydown', handleKeyDown);
-
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, []);
+  }, [isModalOpen]);
+  
 
   const openModal = () => {
     setIsModalOpen(true);
@@ -149,51 +212,52 @@ function MainPage() {
   };
 
   const Modal = ({ isOpen, onClose }) => {
-    if (!isOpen) return null;
-
-    
+    if (!isOpen) return null; // Si el modal no está abierto, no se renderiza nada
+  
     return (
-      <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center">
+      <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
         <div className="bg-white p-6 rounded-lg shadow-lg relative w-full max-w-md">
           <div className="bg-footColor text-white text-center py-2 rounded-t-lg">
             <h1 className="text-lg font-bold text-black">Cantidad de productos</h1>
           </div>
           <div className="px-6 py-8 space-y-4">
-    <div className="space-y-2">
-      <h2 className="text-xl font-bold">Total a cobrar</h2>
-      <p className="text-4xl font-bold text-green-500">${total.toFixed(2)} MXN</p>
-      <h2 className="text-xl font-bold">El cliente pagó</h2>
-      <input
-        type="text"
-        className="w-full rounded-full border-2 text-black border-black bg-gray-200 p-2"
-        value={pagoCliente}
-        onChange={handlePagoClienteChange}
-      />
-      <h2 className="text-xl font-bold">Cambio</h2>
-      <p className="text-4xl font-bold text-red-600">${cambio.toFixed(2)} MXN</p>
-    </div>
-    <div className="mt-8 flex justify-between">
-      <button
-        className="px-4 py-2 bg-white text-black rounded-full border-red-600 border-2 transition-transform duration-300 ease-in-out transform hover:bg-red-400 hover:scale-105"
-        onClick={onClose}
-      >
-        Cancelar
-        <FontAwesomeIcon icon={faXmark} className="ml-2 text-xl font-bold" />
-      </button>
-      <button
-        className="px-4 py-2 bg-white text-black rounded-full border-green-500 border-2 transition-transform duration-300 ease-in-out transform hover:bg-green-300 hover:scale-105"
-        onClick={onClose}
-      >
-        F8 - Confirmar
-        <FontAwesomeIcon icon={faCheck} className="ml-2 text-xl font-bold" />
-      </button>
-    </div>
-  </div>
+            <div className="space-y-2">
+              <h2 className="text-xl font-bold">Total a cobrar</h2>
+              <p className="text-4xl font-bold text-green-500">${total.toFixed(2)} MXN</p>
+              <h2 className="text-xl font-bold">El cliente pagó</h2>
+              <input
+                type="text"
+                className="w-full rounded-full border-2 text-black border-black bg-gray-200 p-2"
+                value={pagoCliente}
+                onChange={handlePagoClienteChange}
+                autoFocus // Opcional: Hace que el input tenga el foco automáticamente al abrir el modal
+              />
+              <h2 className="text-xl font-bold">Cambio</h2>
+              <p className="text-4xl font-bold text-red-600">${cambio.toFixed(2)} MXN</p>
+            </div>
+            <div className="mt-8 flex justify-between">
+              <button
+                className="px-4 py-2 bg-white text-black rounded-full border-red-600 border-2 transition-transform duration-300 ease-in-out transform hover:bg-red-400 hover:scale-105"
+                onClick={onClose}
+              >
+                Cancelar
+                <FontAwesomeIcon icon={faXmark} className="ml-2 text-xl font-bold" />
+              </button>
+              <button
+                className="px-4 py-2 bg-white text-black rounded-full border-green-500 border-2 transition-transform duration-300 ease-in-out transform hover:bg-green-300 hover:scale-105"
+                onClick={onClose}
+              >
+                Enter - Confirmar
+                <FontAwesomeIcon icon={faCheck} className="ml-2 text-xl font-bold" />
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     );
   };
-
+  
+  
 
   return (
     <div className="App flex flex-col h-screen">
@@ -233,15 +297,16 @@ function MainPage() {
 
           {showSearchResults && filteredProducts.length > 0 && (
             <div className="absolute z-10 bg-white border border-gray-300 rounded-lg shadow-lg mt-1 max-h-60 overflow-auto">
-              {filteredProducts.map(product => (
-                <div
-                  key={product.id}
-                  className="p-2 cursor-pointer hover:bg-gray-200"
-                  onClick={() => handleProductSelect(product)}
-                >
-                  {product.nombre} - ${product.precio} MXN
-                </div>
-              ))}
+             {filteredProducts.map((product, index) => (
+               <div
+               key={product.id}
+                className={`p-2 cursor-pointer hover:bg-gray-200 ${selectedIndex === index ? 'bg-gray-300' : ''}`}
+                onClick={() => handleProductSelect(product)}
+              >
+                {product.nombre} - ${product.precio} MXN
+              </div>
+            ))}
+
             </div>
           )}
         </div>
@@ -271,30 +336,38 @@ function MainPage() {
                 <th className="border border-black p-2">Subtotal</th>
               </tr>
             </thead>
-          <tbody>
-            {selectedProducts.map((product, index) => (
-         <tr key={index}>
-      <td className="border border-black p-2">{product.id}</td>
-      <td className="border border-black p-2">{product.nombre}</td>
-      <td className="border border-black p-2">${product.precio}</td>
-      
-      {/* Input para editar la cantidad */}
-      <td className="border border-black p-2">
-        <input
-          type="number"
-          className="rounded-lg p-1 w-20"
-          value={product.cantidad}
-          onChange={(e) => handleEditCantidad(index, e.target.value)}
-          min="1"
-        />
-      </td>
-      
-      <td className="border border-black p-2">
-        ${(product.precio * product.cantidad).toFixed(2)}
-      </td>
-    </tr>
-  ))}
-</tbody>
+                    <tbody>
+          {selectedProducts.map((product, index) => (
+            <tr key={index}>
+              <td className="border border-black p-2">{product.id}</td>
+              <td className="border border-black p-2">{product.nombre}</td>
+              <td className="border border-black p-2">${product.precio}</td>
+
+              <td className="border border-black p-2">
+                <input
+                  type={selectedProducts[0] && !selectedProducts[0].ventaPorPieza ? 'number' : 'number'}
+                  step={selectedProducts[0] && !selectedProducts[0].ventaPorPieza ? '0.01' : '1'} // Permite decimales si `ventaPorPieza` es false
+                  className="rounded-lg p-1 w-20"
+                  value={product.cantidad}
+                  onChange={(e) => handleEditCantidad(index, e.target.value)}
+                  min={0}
+                />
+              </td>
+
+            <td className="border border-black p-2">
+            <div className="flex justify-between items-center">
+              <span>${(product.precio * product.cantidad).toFixed(2)}</span>
+              <button onClick={() => handleRemoveProduct(index)}>
+                <FontAwesomeIcon icon={faXmark} className="text-red-600 text-2xl ml-2 transition-transform duration-200 hover:text-red-800 hover:scale-110"  />
+              </button>
+            </div>
+          </td>
+
+          
+            </tr>
+          ))}
+        </tbody>
+
 
 
           </table>
