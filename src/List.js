@@ -1,25 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, useNavigate, useLocation } from 'react-router-dom'; // Importar useLocation
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import Inventory from './inventory';
 import List from './List';
 import './App.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faHome, faCirclePlus, faPeopleCarryBox, faMagnifyingGlass, faPen, faTrash} from '@fortawesome/free-solid-svg-icons';
+import { faHome, faCirclePlus, faPeopleCarryBox, faMagnifyingGlass, faPen, faTrash } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 
 function HomePage() {
   const [products, setProducts] = useState([]);
   const [category, setCategory] = useState('');
-  const location = useLocation(); // Para acceder a la información de la URL
+  const location = useLocation();
   const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
   const [time, setTime] = useState('');
   const [date, setDate] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const filteredProducts = category
-    ? products.filter(product => product.categoria.toLowerCase() === category.toLowerCase())
-    : products;
+  const [editProduct, setEditProduct] = useState(null);
 
   useEffect(() => {
     // Obtener la categoría de la URL
@@ -58,11 +55,74 @@ function HomePage() {
 
   const openModal = () => {
     setIsModalOpen(true);
+    setEditProduct(null); // Reset edit product on opening the modal
+  };
+
+  const openEditModal = (product) => {
+    setEditProduct(product);
+    setIsModalOpen(true);
   };
 
   const closeModal = () => {
     setIsModalOpen(false);
+    setEditProduct(null);
   };
+
+  const handleSave = async (event) => {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+
+    const productData = {
+      nombre: formData.get('name'),
+      descripcion: formData.get('description'),
+      precio: formData.get('price'),
+      stock: formData.get('stock'),
+      categoria: formData.get('category'),
+    };
+
+    if (editProduct) {
+      // Update existing product
+      try {
+        await axios.put(`http://localhost:5000/api/products/${editProduct._id}`, productData);
+        setProducts(products.map(product =>
+          product._id === editProduct._id ? { ...product, ...productData } : product
+        ));
+      } catch (error) {
+        console.error('Error al actualizar el producto', error);
+      }
+    } else {
+      // Create new product
+      try {
+        const response = await axios.post('http://localhost:5000/api/products', productData);
+        setProducts([...products, response.data]);
+      } catch (error) {
+        console.error('Error al agregar el producto', error);
+      }
+    }
+
+    closeModal();
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await axios.delete(`http://localhost:5000/api/products/${id}`);
+      setProducts(products.filter(product => product._id !== id));
+    } catch (error) {
+      console.error('Error al eliminar el producto', error);
+    }
+  };
+
+  const filteredProducts = products.filter(product => {
+    const idString = String(product.id).toLowerCase();
+    const nameString = String(product.nombre).toLowerCase();
+    const searchLower = searchTerm.toLowerCase();
+
+    const matchesSearchTerm = nameString.includes(searchLower) ||
+                              idString.includes(searchLower);
+    const matchesCategory = category ? product.categoria.toLowerCase() === category.toLowerCase() : true;
+
+    return matchesSearchTerm && matchesCategory;
+  });
 
   return (
     <div className="App flex flex-col h-screen">
@@ -97,12 +157,14 @@ function HomePage() {
               type="text" 
               className='bg-greyColor rounded-md px-4 py-2' 
               value={searchTerm} 
-              onChange={(e) => setSearchTerm(e.target.value)} />
+              onChange={(e) => setSearchTerm(e.target.value)} 
+              placeholder='Buscar por nombre o clave'
+            />
           </div>
         </div>
       </div>
 
-      <div className='bg-white h-screen'>
+      <div className='bg-white h-screen overflow-auto'>
         <table className='min-w-full text-m'>
           <thead>
             <tr>
@@ -125,14 +187,14 @@ function HomePage() {
                   <td className={`border border-black px-4 py-2 ${product.stock === 0 ? 'text-red-500 font-bold' : ''}`}>
                     {product.stock}
                   </td>
-                          <td className='border border-black px-4 py-2'>
-                <button className='transition-all duration-300 hover:scale-110'>
-                  <FontAwesomeIcon icon={faPen} className="mr-2 text-2xl font-bold" />
-                </button>
-                <button className='transition-all duration-300 hover:scale-110'>
-                  <FontAwesomeIcon icon={faTrash} className="ml-3 text-2xl font-bold" />
-                </button>
-               </td>
+                  <td className='border border-black px-4 py-2'>
+                    <button onClick={() => openEditModal(product)} className='transition-all duration-300 hover:scale-110'>
+                      <FontAwesomeIcon icon={faPen} className="mr-2 text-2xl font-bold" />
+                    </button>
+                    <button onClick={() => handleDelete(product._id)} className='transition-all duration-300 hover:scale-110'>
+                      <FontAwesomeIcon icon={faTrash} className="ml-3 text-2xl font-bold" />
+                    </button>
+                  </td>
                 </tr>
               ))
             ) : (
@@ -161,26 +223,29 @@ function HomePage() {
       </footer>
 
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white p-8 rounded-lg shadow-lg w-1/2">
-            <h2 className="text-2xl font-bold mb-4">Nuevo Producto</h2>
-            <form>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white p-6 rounded-lg w-1/2">
+            <h2 className="text-xl font-bold mb-4">{editProduct ? 'Editar Producto' : 'Agregar Producto'}</h2>
+            <form onSubmit={handleSave}>
               <div className="mb-4">
-                <label className="block text-lg font-semibold mb-2" htmlFor="name">Nombre del producto</label>
+                <label className="block text-lg font-semibold mb-2" htmlFor="name">Nombre</label>
                 <input
                   type="text"
                   id="name"
                   name="name"
+                  defaultValue={editProduct ? editProduct.nombre : ''}
                   className="w-full bg-greyColor rounded-md px-4 py-2 border border-gray-300"
+                  required
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-lg font-semibold mb-2" htmlFor="description">Descripción del producto</label>
-                <textarea
+                <label className="block text-lg font-semibold mb-2" htmlFor="description">Descripción</label>
+                <input
+                  type="text"
                   id="description"
                   name="description"
+                  defaultValue={editProduct ? editProduct.descripcion : ''}
                   className="w-full bg-greyColor rounded-md px-4 py-2 border border-gray-300"
-                  rows="3"
                 />
               </div>
               <div className="mb-4">
@@ -189,7 +254,10 @@ function HomePage() {
                   type="number"
                   id="price"
                   name="price"
+                  step="0.01"
+                  defaultValue={editProduct ? editProduct.precio : ''}
                   className="w-full bg-greyColor rounded-md px-4 py-2 border border-gray-300"
+                  required
                 />
               </div>
               <div className="mb-4">
@@ -198,6 +266,7 @@ function HomePage() {
                   type="number"
                   id="stock"
                   name="stock"
+                  defaultValue={editProduct ? editProduct.stock : ''}
                   className="w-full bg-greyColor rounded-md px-4 py-2 border border-gray-300"
                 />
               </div>
@@ -206,6 +275,7 @@ function HomePage() {
                 <select
                   id="category"
                   name="category"
+                  defaultValue={editProduct ? editProduct.categoria : ''}
                   className="w-full bg-greyColor rounded-md px-4 py-2 border border-gray-300"
                 >
                   <option value="">Seleccionar categoría</option>
