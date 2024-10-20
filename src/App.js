@@ -24,6 +24,7 @@ function MainPage() {
   const [pagoCliente, setPagoCliente] = useState(0);
   const total = selectedProducts.reduce((acc, product) => acc + product.precio * product.cantidad, 0);
   const [cambio, setCambio] = useState(0);
+  
 
   const handleRemoveProduct = (index) => {
     const updatedProducts = [...selectedProducts];
