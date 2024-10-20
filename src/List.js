@@ -9,6 +9,8 @@ import axios from 'axios';
 
 function HomePage() {
   const [products, setProducts] = useState([]);
+  const [confirmationMessage, setConfirmationMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
   const [category, setCategory] = useState('');
   const location = useLocation();
   const [searchTerm, setSearchTerm] = useState('');
@@ -17,9 +19,10 @@ function HomePage() {
   const [date, setDate] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editProduct, setEditProduct] = useState(null);
+  const [precio, setPrecio] = useState(0);
+  const [stock, setStock] = useState(0);
 
   useEffect(() => {
-    // Obtener la categoría de la URL
     const queryParams = new URLSearchParams(location.search);
     const categoryFromParams = queryParams.get('category');
     setCategory(categoryFromParams || '');
@@ -71,46 +74,63 @@ function HomePage() {
   const handleSave = async (event) => {
     event.preventDefault();
     const formData = new FormData(event.target);
-
+  
     const productData = {
       nombre: formData.get('name'),
       descripcion: formData.get('description'),
       precio: formData.get('price'),
       stock: formData.get('stock'),
       categoria: formData.get('category'),
+      ventaPorPieza: formData.get('ventaPorPieza') === 'pieza', // Esto dependerá de tu lógica
     };
+    
 
+    const productExists = products.some(existingProduct => 
+      existingProduct.nombre.toLowerCase() === productData.nombre.toLowerCase() && 
+      existingProduct._id !== (editProduct ? editProduct._id : null)
+    );
+
+    if (productExists) {
+      setErrorMessage('El producto ya existe.'); // Mostrar error si el producto ya está en la lista
+      setTimeout(() => {
+        setErrorMessage('');
+      }, 3000);
+      return; // Salir de la función para no continuar con la creación del producto
+    }
+
+
+    
     if (editProduct) {
-      // Update existing product
       try {
         await axios.put(`http://localhost:5000/api/products/${editProduct._id}`, productData);
         setProducts(products.map(product =>
           product._id === editProduct._id ? { ...product, ...productData } : product
         ));
+        setConfirmationMessage('Producto actualizado correctamente');
       } catch (error) {
         console.error('Error al actualizar el producto', error);
       }
     } else {
-      // Create new product
+      // Crear nuevo producto
       try {
         const response = await axios.post('http://localhost:5000/api/products', productData);
         setProducts([...products, response.data]);
+        setConfirmationMessage('Producto creado correctamente');
       } catch (error) {
         console.error('Error al agregar el producto', error);
       }
     }
 
     closeModal();
+
+
+    // Ocultar el mensaje después de 3 segundos
+    setTimeout(() => {
+      setConfirmationMessage('');
+    }, 3000);
   };
 
-  const handleDelete = async (id) => {
-    try {
-      await axios.delete(`http://localhost:5000/api/products/${id}`);
-      setProducts(products.filter(product => product._id !== id));
-    } catch (error) {
-      console.error('Error al eliminar el producto', error);
-    }
-  };
+  
 
   const filteredProducts = products.filter(product => {
     const idString = String(product.id).toLowerCase();
@@ -132,6 +152,18 @@ function HomePage() {
           <p className="font-lobsterTwo font-semibold text-letterColor text-2xl">{date}</p>
         </div>
       </header>
+      
+      {confirmationMessage && (
+        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white font-bold py-2 px-4 rounded-md shadow-lg transition-all duration-300">
+          {confirmationMessage}
+        </div>
+      )}
+
+      {errorMessage && (
+        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white font-bold py-2 px-4 rounded-md shadow-lg transition-all duration-300">
+          {errorMessage}
+        </div>
+      )}
 
       <div className='bg-white p-4'>
         <div className='flex justify-between items-center'>
@@ -142,11 +174,6 @@ function HomePage() {
             >
               <FontAwesomeIcon icon={faCirclePlus} className="mr-2 text-4xl font-bold" />
               Nuevo Producto
-            </button>
-
-            <button className='bg-white font-semibold text-3xl px-8 py-5 flex items-center transition-all duration-300 hover:scale-110'>
-              <FontAwesomeIcon icon={faPeopleCarryBox} className="mr-2 text-4xl font-bold" />
-              Agregar stock
             </button>
           </div>
 
@@ -180,7 +207,7 @@ function HomePage() {
             {filteredProducts.length > 0 ? (
               filteredProducts.map((product) => (
                 <tr key={product._id}>
-                  <td className='border border-black px-4 py-2'>{product.id}</td>
+                  <td className='border border-black px-4 py-2'>{product.claveProducto}</td>
                   <td className='border border-black px-4 py-2'>{product.nombre}</td>
                   <td className='border border-black px-4 py-2'>{product.descripcion}</td>
                   <td className='border border-black px-4 py-2'>${product.precio}</td>
@@ -191,7 +218,7 @@ function HomePage() {
                     <button onClick={() => openEditModal(product)} className='transition-all duration-300 hover:scale-110'>
                       <FontAwesomeIcon icon={faPen} className="mr-2 text-2xl font-bold" />
                     </button>
-                    <button onClick={() => handleDelete(product._id)} className='transition-all duration-300 hover:scale-110'>
+                    <button className='transition-all duration-300 hover:scale-110'>
                       <FontAwesomeIcon icon={faTrash} className="ml-3 text-2xl font-bold" />
                     </button>
                   </td>
@@ -256,6 +283,7 @@ function HomePage() {
                   name="price"
                   step="0.01"
                   defaultValue={editProduct ? editProduct.precio : ''}
+                  onChange={(e) => setPrecio(Math.max(0, e.target.value))}
                   className="w-full bg-greyColor rounded-md px-4 py-2 border border-gray-300"
                   required
                 />
@@ -271,21 +299,36 @@ function HomePage() {
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-lg font-semibold mb-2" htmlFor="category">Categoría</label>
+                <label className="block text-lg font-semibold mb-2" htmlFor="ventaPorPieza">Se vende por:</label>
                 <select
-                  id="category"
-                  name="category"
-                  defaultValue={editProduct ? editProduct.categoria : ''}
+                  id="ventaPorPieza"
+                  name="ventaPorPieza"
+                  defaultValue={editProduct ? editProduct.ventaPorPieza: ''}
                   className="w-full bg-greyColor rounded-md px-4 py-2 border border-gray-300"
                 >
-                  <option value="">Seleccionar categoría</option>
-                  <option value="carnes frias">Carnes frías</option>
-                  <option value="productos bimbo">Productos Bimbo</option>
-                  <option value="quesos">Quesos</option>
-                  <option value="productos lacteos">Productos lácteos</option>
-                  <option value="otro">Otro</option>
+                  <option value="pieza">Pieza</option>
+                  <option value="kilogramos">Kilogramos</option>
                 </select>
               </div>
+              
+              <div className="mb-4">
+                    <label className="block text-lg font-semibold mb-2" htmlFor="category">Categoría</label>
+                    <select
+                      id="category"
+                      name="category"
+                      defaultValue={editProduct ? editProduct.categoria : ''}
+                      className="w-full bg-greyColor rounded-md px-4 py-2 border border-gray-300"
+                      required // Puedes hacer este campo requerido si es necesario
+                    >
+                      <option value="">Seleccionar categoría</option>
+                      <option value="carnes frias">Carnes frías</option>
+                      <option value="productos bimbo">Productos Bimbo</option>
+                      <option value="quesos">Quesos</option>
+                      <option value="productos lacteos">Productos lácteos</option>
+                      <option value="otro">Otro</option>
+                    </select>
+                  </div>
+
               <div className="flex justify-end space-x-4">
                 <button type="submit" className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
                   Guardar

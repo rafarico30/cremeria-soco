@@ -1,13 +1,13 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const productsRoutes = require('./routes/products'); // Importa las rutas de productos
+const productsRoutes = require('./routes/products');
 
 const app = express();
-const port = 5000; 
+const port = 5000;
 
 app.use(cors());
-app.use(express.json()); 
+app.use(express.json());
 
 mongoose.connect('mongodb://localhost:27017/cremeriaSoco', {
   useNewUrlParser: true,
@@ -18,7 +18,7 @@ mongoose.connect('mongodb://localhost:27017/cremeriaSoco', {
   console.error('Error al conectar a la base de datos', err);
 });
 
-// Usa las rutas de productos
+// Usar las rutas de productos con el prefijo /api
 app.use('/api', productsRoutes);
 
 app.listen(port, () => {

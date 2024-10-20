@@ -77,8 +77,7 @@ function MainPage() {
 
     if (term.trim() !== '') {
       const filtered = products.filter(product =>
-        product.nombre.toLowerCase().includes(term.toLowerCase()) ||
-        product.id.toString().toLowerCase().includes(term.toLowerCase())
+        product.nombre.toLowerCase().includes(term.toLowerCase())
       );
       setFilteredProducts(filtered);
     } else {

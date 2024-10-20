@@ -1,15 +1,24 @@
-// backend/models/Product.js
-
 const mongoose = require('mongoose');
 
-const ProductSchema = new mongoose.Schema({
-  id: { type: Number, required: true },
+const productSchema = new mongoose.Schema({
+  claveProducto: { type: Number, unique: true },
   nombre: { type: String, required: true },
-  descripcion: { type: String, required: true },
+  descripcion: String,
   precio: { type: Number, required: true },
   stock: { type: Number, required: true },
-  ventaPorPieza: { type: Boolean, required: true },
   categoria: { type: String, required: true },
-}, { collection: 'productos' }); 
+  ventaPorPieza: { type: Boolean, required: true }
+});
 
-module.exports = mongoose.model('Product', ProductSchema);
+productSchema.pre('save', async function(next) {
+  const product = this;
+  
+  if (product.isNew) {
+    const lastProduct = await mongoose.model('Product').findOne().sort({ claveProducto: -1 });
+    product.claveProducto = lastProduct ? lastProduct.claveProducto + 1 : 1;
+  }
+  
+  next();
+});
+
+module.exports = mongoose.model('Product', productSchema);
