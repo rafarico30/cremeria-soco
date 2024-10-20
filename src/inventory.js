@@ -50,7 +50,9 @@ function HomePage() {
     <div className="App flex flex-col h-screen">
       <header className="bg-greyColor p-4">
         <div className="flex justify-between items-center">
+        <button onClick={() => window.location.href = '/'}>
           <p className="font-lobsterTwo text-letterColor font-extrabold text-5xl">Cremería Soco</p>
+        </button>
           <p className="font-lobsterTwo font-semibold text-letterColor text-2xl">{date}</p>
         </div>
       </header>
