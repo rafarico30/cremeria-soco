@@ -125,32 +125,32 @@ function MainPage() {
     };
   }, [filteredProducts, selectedIndex]);
 
-  
-  const handleProductSelect = (product) => {
-    const existingProductIndex = selectedProducts.findIndex(p => p.id === product.id);
-    const isDecimalAllowed = !product.ventaPorPieza;
-  
-    if (existingProductIndex !== -1) {
-      const updatedProducts = [...selectedProducts];
-      const currentProduct = updatedProducts[existingProductIndex];
-  
-      if (isDecimalAllowed || Number.isInteger(currentProduct.cantidad + cantidad)) {
-        currentProduct.cantidad += cantidad;
-        setSelectedProducts(updatedProducts);
+    
+    const handleProductSelect = (product) => {
+      const existingProductIndex = selectedProducts.findIndex(p => p._id === product._id);
+      const isDecimalAllowed = !product.ventaPorPieza;
+    
+      if (existingProductIndex !== -1) {
+        const updatedProducts = [...selectedProducts];
+        const currentProduct = updatedProducts[existingProductIndex];
+    
+        if (isDecimalAllowed || Number.isInteger(currentProduct.cantidad + cantidad)) {
+          currentProduct.cantidad += cantidad;
+          setSelectedProducts(updatedProducts);
+        }
+      } else {
+        if (isDecimalAllowed || Number.isInteger(cantidad)) {
+          const productWithQuantity = { ...product, cantidad: cantidad };
+          setSelectedProducts(prevProducts => [...prevProducts, productWithQuantity]);
+        }
       }
-    } else {
-      if (isDecimalAllowed || Number.isInteger(cantidad)) {
-        const productWithQuantity = { ...product, cantidad: cantidad };
-        setSelectedProducts(prevProducts => [...prevProducts, productWithQuantity]);
-      }
-    }
-  
-    setSearchTerm('');
-    setShowSearchResults(false);
-    setCantidad(product.ventaPorPieza ? 1 : 1.0);
-    setSelectedIndex(-1);
-  };
-  
+    
+      setSearchTerm('');
+      setShowSearchResults(false);
+      setCantidad(product.ventaPorPieza ? 1 : 1.0);
+      setSelectedIndex(-1);
+    };
+    
   
 
 
@@ -300,7 +300,7 @@ function MainPage() {
             <div className="absolute z-10 bg-white border border-gray-300 rounded-lg shadow-lg mt-1 max-h-60 overflow-auto">
              {filteredProducts.map((product, index) => (
                <div
-               key={product.id}
+               key={product._id}
                 className={`p-2 cursor-pointer hover:bg-gray-200 ${selectedIndex === index ? 'bg-gray-300' : ''}`}
                 onClick={() => handleProductSelect(product)}
               >
@@ -340,7 +340,7 @@ function MainPage() {
                     <tbody>
           {selectedProducts.map((product, index) => (
             <tr key={index}>
-              <td className="border border-black p-2">{product.id}</td>
+              <td className="border border-black p-2">{product.claveProducto}</td>
               <td className="border border-black p-2">{product.nombre}</td>
               <td className="border border-black p-2">${product.precio}</td>
 
