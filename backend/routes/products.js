@@ -1,6 +1,10 @@
 const express = require('express');
 const router = express.Router();
+const PDFDocument = require('pdfkit');
+const fs = require('fs');
+const path = require('path');
 const Product = require('../models/Product');
+const Venta = require('../models/Venta');
 
 // Ruta para obtener productos (GET)
 router.get('/products', async (req, res) => {
@@ -11,6 +15,7 @@ router.get('/products', async (req, res) => {
 
     if (searchTerm) {
       const isNumeric = !isNaN(searchTerm);
+      const sanitizedSearchTerm = searchTerm.replace(/[\\^$.*+?()[\]{}|]/g, '\\$&');
       query = isNumeric
         ? { claveProducto: parseInt(searchTerm) }
         : { nombre: { $regex: searchTerm, $options: 'i' } };
@@ -79,5 +84,32 @@ router.post('/products', async (req, res) => {
     res.status(500).json({ error: 'Error al guardar el producto', details: err.message });
   }
 });
+
+
+// Ruta para registrar una nueva venta (POST)
+router.post('/ventas', async (req, res) => {
+  try {
+    const { productos, total, pagoCliente, cambio } = req.body;
+
+    if (!productos || !total || !pagoCliente || !cambio) {
+      return res.status(400).json({ error: 'Faltan campos obligatorios' });
+    }
+
+    const nuevaVenta = new Venta({
+      productos,
+      total,
+      pagoCliente,
+      cambio
+    });
+
+    const ventaGuardada = await nuevaVenta.save();
+    res.status(201).json(ventaGuardada);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al guardar la venta', details: err.message });
+  }
+});
+
+
 
 module.exports = router;

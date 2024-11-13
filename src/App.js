@@ -16,7 +16,7 @@ function MainPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [cantidad, setCantidad] = useState(1);
   const [selectedIndex, setSelectedIndex] = useState(-1);   
-  const [searchTerm, setSearchTerm] = useState(''); // Estado para el término de búsqueda
+  const [searchTerm, setSearchTerm] = useState(''); 
   const [products, setProducts] = useState([]); // Estado para los productos
   const [filteredProducts, setFilteredProducts] = useState([]); // Productos filtrados para mostrar en la búsqueda
   const [selectedProducts, setSelectedProducts] = useState([]); // Productos seleccionados para agregar a la tabla
@@ -24,6 +24,8 @@ function MainPage() {
   const [pagoCliente, setPagoCliente] = useState(0);
   const total = selectedProducts.reduce((acc, product) => acc + product.precio * product.cantidad, 0);
   const [cambio, setCambio] = useState(0);
+
+
   
 
   const handleRemoveProduct = (index) => {
@@ -44,6 +46,39 @@ function MainPage() {
       setSelectedProducts(updatedProducts);
     }
   };
+
+  const handleConfirmSale = async () => {
+    try {
+      // Datos de la venta a enviar al backend
+      const saleData = {
+        productos: selectedProducts.map(product => ({
+          producto: product._id,          // Asegúrate de enviar el ID del producto
+          cantidad: product.cantidad,     // Cantidad del producto
+          precioUnitario: product.precio, // Asegúrate de enviar el precioUnitario
+        })),
+        total,
+        pagoCliente,
+        cambio,
+      };
+  
+      // Llamada a la API para registrar la venta
+      const response = await axios.post('http://localhost:5000/api/ventas', saleData);
+  
+      if (response.status === 201) {
+        // Si la venta fue exitosa, limpiar el carrito y otros estados
+        
+        setSelectedProducts([]);  // Limpiar productos seleccionados
+        setPagoCliente(0);        // Limpiar el pago del cliente
+        setCambio(0);             // Limpiar el cambio
+        alert('Venta realizada con éxito');
+      }
+    } catch (error) {
+      console.error('Error al realizar la venta', error);
+      alert('Hubo un problema al procesar la venta');
+    }
+  };
+  
+  
   
   const handleCancelSale = () => {
     const confirmCancel = window.confirm("¿Estás seguro de que deseas cancelar la venta?");
@@ -106,6 +141,7 @@ function MainPage() {
       setCambio(pagoCliente - total);
     } else {
       setCambio(0);
+      
     }
   }, [pagoCliente, total]);
   
@@ -164,6 +200,7 @@ function MainPage() {
         setProducts(response.data);
       } catch (error) {
         console.error('Error al obtener los productos', error);
+        alert('Hubo un error al obtener los productos.');
       }
     };
 
@@ -245,7 +282,7 @@ function MainPage() {
               </button>
               <button
                 className="px-4 py-2 bg-white text-black rounded-full border-green-500 border-2 transition-transform duration-300 ease-in-out transform hover:bg-green-300 hover:scale-105"
-                onClick={onClose}
+                onClick={handleConfirmSale}
               >
                 Enter - Confirmar
                 <FontAwesomeIcon icon={faCheck} className="ml-2 text-xl font-bold" />
@@ -314,13 +351,16 @@ function MainPage() {
         </div>
         
         <div className="flex items-center ml-6">
-          <h2 className="font-bold">Cantidad:</h2>
-          <input 
-            type="number" 
-            className="border border-black rounded-lg p-2 ml-4 w-20"
-            value={cantidad}
-            onChange={handleCantidadChange} 
-          />  
+        <h2 className="font-bold">Cantidad:</h2>
+        <input 
+          type="number" 
+          className="border border-black rounded-lg p-2 ml-4 w-20"
+          value={cantidad}
+          onChange={handleCantidadChange} 
+          min="1" 
+          step="1"
+        />
+
 
           <FontAwesomeIcon icon={faCheese} className="ml-2 text-2xl" />
         </div>
@@ -348,8 +388,7 @@ function MainPage() {
               <td className="border border-black p-2">
                 <input
                   type={selectedProducts[0] && !selectedProducts[0].ventaPorPieza ? 'number' : 'number'}
-                  step={selectedProducts[0] && !selectedProducts[0].ventaPorPieza ? '0.01' : '1'} // Permite decimales si `ventaPorPieza` es false
-                  className="rounded-lg p-1 w-20"
+                  step={selectedProducts[0] && !selectedProducts[0].ventaPorPieza ? '0.01' : '1'} 
                   value={product.cantidad}
                   onChange={(e) => handleEditCantidad(index, e.target.value)}
                   min={0}
@@ -380,7 +419,7 @@ function MainPage() {
       <div className="bg-greyColor p-4 flex justify-around space-x-20">
       <button
         className="border-2 border-redColor rounded-full px-5 bg-redColor text-black font-bold hover:bg-red-400 hover:border-red-400 transition duration-300"
-        onClick={handleCancelSale} // Asignar la función aquí
+        onClick={handleCancelSale} 
       >
         Cancelar venta
         <FontAwesomeIcon icon={faXmark} className="ml-2 text-xl font-bold" />
