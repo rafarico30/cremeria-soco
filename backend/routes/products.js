@@ -91,25 +91,68 @@ router.post('/ventas', async (req, res) => {
   try {
     const { productos, total, pagoCliente, cambio } = req.body;
 
+    // Validar campos obligatorios
     if (!productos || !total || !pagoCliente || !cambio) {
       return res.status(400).json({ error: 'Faltan campos obligatorios' });
     }
 
+    // Crear un nuevo objeto de Venta en la base de datos
     const nuevaVenta = new Venta({
       productos,
       total,
       pagoCliente,
-      cambio
+      cambio,
     });
 
+    // Guardar la venta en la base de datos
     const ventaGuardada = await nuevaVenta.save();
+
+    // Cambia esta ruta a un directorio simple en tu proyecto para hacer pruebas
+    const ticketDir = path.join(__dirname, 'tickets');  // Usamos el directorio local
+
+    // Verificar si la carpeta 'tickets' existe, si no, crearla
+    if (!fs.existsSync(ticketDir)) {
+      console.log('La carpeta no existe, creando...');
+      fs.mkdirSync(ticketDir, { recursive: true });
+    } else {
+      console.log('La carpeta ya existe');
+    }
+
+    // Ruta completa del archivo PDF
+    const filePath = path.join(ticketDir, `ticket_venta_${ventaGuardada._id}.pdf`);
+    console.log('Guardando PDF en:', filePath);
+
+    // Crear el documento PDF
+    const doc = new PDFDocument();
+    const writeStream = fs.createWriteStream(filePath);
+
+    // Agregar contenido al PDF
+    doc.pipe(writeStream);
+    doc.fontSize(20).text('Resumen de Venta', { align: 'center' });
+    doc.fontSize(12).text(`Venta ID: ${ventaGuardada._id}`);
+    doc.text(`Total: $${ventaGuardada.total}`);
+    doc.text(`Pago del cliente: $${ventaGuardada.pagoCliente}`);
+    doc.text(`Cambio: $${ventaGuardada.cambio}`);
+
+    doc.text('\nProductos:');
+    ventaGuardada.productos.forEach((producto, index) => {
+      doc.text(`${index + 1}. ${producto.producto} - Cantidad: ${producto.cantidad} - Precio: $${producto.precioUnitario}`);
+    });
+
+    // Finalizar el documento PDF
+    doc.end();
+
+    // Manejo de errores al escribir el archivo
+    writeStream.on('finish', () => {
+      console.log('PDF guardado con éxito en', filePath);
+    });
+
+    // Responder con la venta guardada
     res.status(201).json(ventaGuardada);
+
   } catch (err) {
-    console.error(err);
+    console.error('Error al procesar la venta:', err);
     res.status(500).json({ error: 'Error al guardar la venta', details: err.message });
   }
 });
-
-
-
 module.exports = router;
