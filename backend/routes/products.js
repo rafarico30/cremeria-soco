@@ -155,4 +155,16 @@ router.post('/ventas', async (req, res) => {
     res.status(500).json({ error: 'Error al guardar la venta', details: err.message });
   }
 });
+
+// Ruta para obtener las ventas
+router.get('/ventas', async (req, res) => {
+  try {
+    const ventas = await Venta.find();
+    res.json(ventas);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al obtener las ventas' });
+  }
+});
+
 module.exports = router;

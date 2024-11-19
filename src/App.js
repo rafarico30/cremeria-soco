@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
 import Inventory from './inventory'; 
 import List from './List';
+import Ventas from './ventas'
 import './App.css';
 import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -314,7 +315,9 @@ function MainPage() {
           <FontAwesomeIcon icon={faBoxesStacked} className="ml-3 text-lg" />
         </button>
 
-        <button className="border-2 border-black rounded-full px-16 py-1 text-black hover:bg-gray-200 transition duration-300">
+        <button className="border-2 border-black rounded-full px-16 py-1 text-black hover:bg-gray-200 transition duration-300"
+        onClick={() => navigate('/ventas')}
+        >
           Ventas
           <FontAwesomeIcon icon={faCalculator} className="ml-4 text-lg" />
         </button>
@@ -457,6 +460,7 @@ function App() {
       <Route path="/" element={<MainPage />} />
       <Route path="/inventory" element={<Inventory />} />
       <Route path="/list" element={<List/>} />
+      <Route path="/ventas" element={<Ventas/>} />
     </Routes>
   );
 }
