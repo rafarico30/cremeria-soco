@@ -5,6 +5,8 @@ import List from './List';
 import './App.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft, faList } from '@fortawesome/free-solid-svg-icons';
+import Header from "./components/Header";
+import Footer from "./components/Footer";
 import jamon from './assets/images/jamon.png';
 import queso from './assets/images/queso.png';
 import trigo from './assets/images/trigo.png';
@@ -12,27 +14,7 @@ import yogur from './assets/images/yogur.png';
 
 function HomePage() {
   const navigate = useNavigate();
-
-  const [time, setTime] = useState('');
-  const [date, setDate] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const now = new Date();
-      const formattedTime = now.toLocaleTimeString();
-      setTime(formattedTime);
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
-    const now = new Date();
-    const options = { day: 'numeric', month: 'long', year: 'numeric' };
-    const formattedDate = now.toLocaleDateString('es-ES', options);
-    setDate(formattedDate);
-  }, []);
 
   const openModal = () => {
     setIsModalOpen(true);
@@ -48,15 +30,7 @@ function HomePage() {
 
   return (
     <div className="App flex flex-col h-screen">
-      <header className="bg-greyColor p-4">
-        <div className="flex justify-between items-center">
-        <button onClick={() => window.location.href = '/'}>
-          <p className="font-lobsterTwo text-letterColor font-extrabold text-5xl">Cremería Soco</p>
-        </button>
-          <p className="font-lobsterTwo font-semibold text-letterColor text-2xl">{date}</p>
-        </div>
-      </header>
-
+       <Header title="Cremería Soco" />
       <div className="bg-white h-screen flex flex-wrap">
         <button onClick={() => handleCategoryClick('carnes frias')} className="font-lobsterTwo text-letterColor font-extrabold text-5xl w-1/2 p-4 border-black border-4 flex items-center shadow-none transition-shadow duration-300 cursor-pointer hover:shadow-lg hover:shadow-gray-800">
           <img src={jamon} alt="jamon" className="w-48 h-48 mr-32 ml-8" />
@@ -88,12 +62,7 @@ function HomePage() {
       </div>
 
       <div className="bg-greyColor p-4 flex justify-around space-x-20"></div>
-
-      <footer className="bg-footColor p-4">
-        <div className="text-right font-bold text-black text-lg">
-          {time}
-        </div>
-      </footer>
+      <Footer />
 
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">

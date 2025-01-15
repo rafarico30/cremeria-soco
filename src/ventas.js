@@ -1,12 +1,12 @@
   import React, { useState, useEffect } from 'react';
   import { Routes, Route, useNavigate } from 'react-router-dom';
   import './App.css';
+  import Header from "./components/Header";
+  import Footer from "./components/Footer";
 
   function HomePage() {
     const navigate = useNavigate();
     const [ventas, setVentas] = useState([]);
-    const [time, setTime] = useState('');
-    const [date, setDate] = useState('');
 
     useEffect(() => {
       const fetchVentas = async () => {
@@ -22,34 +22,10 @@
       fetchVentas();
     }, []);
 
-    useEffect(() => {
-      const interval = setInterval(() => {
-        const now = new Date();
-        const formattedTime = now.toLocaleTimeString();
-        setTime(formattedTime);
-      }, 1000);
-
-      return () => clearInterval(interval);
-    }, []);
-
-    useEffect(() => {
-      const now = new Date();
-      const options = { day: 'numeric', month: 'long', year: 'numeric' };
-      const formattedDate = now.toLocaleDateString('es-ES', options);
-      setDate(formattedDate);
-    }, []);
 
     return (
       <div className="App flex flex-col h-screen">
-      <header className="fixed top-0 w-full bg-greyColor p-4 z-10"> 
-          <div className="flex justify-between items-center">
-            <button onClick={() => navigate('/')}>
-              <p className="font-lobsterTwo text-letterColor font-extrabold text-5xl">Cremería Soco</p>
-            </button>
-            <p className="font-lobsterTwo font-semibold text-letterColor text-2xl">{date}</p>
-          </div>
-        </header>
-        
+       <Header title="Cremería Soco"/>
         <div className="bg-white p-4 flex flex-col space-y-4">
           <h2 className="text-redColor text-2xl font-bold">Historial de Ventas</h2>
           {ventas.length === 0 ? (
@@ -82,15 +58,7 @@
             </ul>
           )}
         </div>
-
-        <div className="bg-greyColor p-4 flex justify-around space-x-20"></div>
-
-            <footer className="fixed bottom-0 w-full bg-footColor p-4">
-        <div className="text-right font-bold text-black text-lg">
-          {time}
-        </div>
-      </footer>
-
+          <Footer/>
       </div>
     );
   }

@@ -3,17 +3,17 @@ import { Routes, Route, useNavigate } from 'react-router-dom';
 import Inventory from './inventory'; 
 import List from './List';
 import Ventas from './ventas'
+import Proveedores from './proveedores'
 import './App.css';
 import axios from 'axios';
+import Header from "./components/Header";
+import Footer from "./components/Footer";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBoxesStacked, faCalculator, faXmark, faSearch, faCheese, faCheck } from '@fortawesome/free-solid-svg-icons';
+import { faBoxesStacked, faCalculator, faXmark, faSearch, faCheese, faCheck, faPeopleCarryBox } from '@fortawesome/free-solid-svg-icons';
 
 function MainPage() {
   
   const navigate = useNavigate(); 
-
-  const [time, setTime] = useState('');
-  const [date, setDate] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [cantidad, setCantidad] = useState(1);
   const [selectedIndex, setSelectedIndex] = useState(-1);   
@@ -207,23 +207,6 @@ function MainPage() {
   }, [searchTerm]); 
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      const now = new Date();
-      const formattedTime = now.toLocaleTimeString();
-      setTime(formattedTime);
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
-    const now = new Date();
-    const options = { day: 'numeric', month: 'long', year: 'numeric' };
-    const formattedDate = now.toLocaleDateString('es-ES', options);
-    setDate(formattedDate);
-  }, []);
-
-  useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key === 'F8') {
         openModal();
@@ -297,15 +280,7 @@ function MainPage() {
 
   return (
     <div className="App flex flex-col h-screen">
-      <header className="bg-greyColor p-4">
-        <div className="flex justify-between items-center">
-        <button onClick={() => window.location.href = '/'}>
-          <p className="font-lobsterTwo text-letterColor font-extrabold text-5xl">Cremería Soco</p>
-        </button>
-          <p className="font-lobsterTwo font-semibold text-letterColor text-2xl">{date}</p>
-        </div>
-      </header>
-
+        <Header title="Cremería Soco" />
       <div className="bg-greyColor2 flex justify-center items-center space-x-8 p-4">
         <button 
           className="border-2 border-black rounded-full px-3 py-1 text-black hover:bg-gray-200 transition duration-300"
@@ -321,9 +296,34 @@ function MainPage() {
           Ventas
           <FontAwesomeIcon icon={faCalculator} className="ml-4 text-lg" />
         </button>
+
+        <button className="border-2 border-black rounded-full px-16 py-1 text-black hover:bg-gray-200 transition duration-300"
+        onClick={() => navigate('/proveedores')}
+        >
+          Proveedores
+          <FontAwesomeIcon icon={faPeopleCarryBox} className="ml-4 text-lg" />
+        </button>
       </div>
 
+      
+
       <div className="bg-white border border-black p-4 flex items-center relative">
+
+      <div className="flex items-center ml-6">
+        <h2 className="font-bold">Cantidad:</h2>
+        <input 
+          type="number" 
+          className="border border-black rounded-lg p-2 ml-4 w-20"
+          value={cantidad}
+          onChange={handleCantidadChange} 
+          min="1" 
+          step="1"
+        />
+
+
+          <FontAwesomeIcon icon={faCheese} className="ml-2 text-2xl" />
+        </div>
+        
         <h2 className="font-bold ml-6">Nombre del producto:</h2>
         <div className="relative">
           <input 
@@ -349,21 +349,6 @@ function MainPage() {
 
             </div>
           )}
-        </div>
-        
-        <div className="flex items-center ml-6">
-        <h2 className="font-bold">Cantidad:</h2>
-        <input 
-          type="number" 
-          className="border border-black rounded-lg p-2 ml-4 w-20"
-          value={cantidad}
-          onChange={handleCantidadChange} 
-          min="1" 
-          step="1"
-        />
-
-
-          <FontAwesomeIcon icon={faCheese} className="ml-2 text-2xl" />
         </div>
       </div>
 
@@ -440,11 +425,7 @@ function MainPage() {
         </div>
       </div>
 
-      <footer className="bg-footColor p-4">
-        <div className="text-right font-bold text-black text-lg">
-          {time}
-        </div>
-      </footer>
+    <Footer/>
 
   
   <Modal isOpen={isModalOpen} onClose={closeModal} />
@@ -461,6 +442,7 @@ function App() {
       <Route path="/inventory" element={<Inventory />} />
       <Route path="/list" element={<List/>} />
       <Route path="/ventas" element={<Ventas/>} />
+      <Route path="/proveedores" element={<Proveedores/>} />
     </Routes>
   );
 }

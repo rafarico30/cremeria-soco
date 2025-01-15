@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const productsRoutes = require('./routes/products');
+const proveedoresRoutes = require('./routes/proveedores');
 
 const app = express();
 const port = 5000;
@@ -20,6 +21,7 @@ mongoose.connect('mongodb://localhost:27017/cremeriaSoco', {
 
 // Usar las rutas de productos con el prefijo /api
 app.use('/api', productsRoutes);
+app.use('/api', proveedoresRoutes);
 
 app.listen(port, () => {
   console.log(`Servidor corriendo en http://localhost:${port}`);

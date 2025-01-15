@@ -4,6 +4,8 @@ import Inventory from './inventory';
 import List from './List';
 import './App.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import Header from "./components/Header";
+import Footer from "./components/Footer";
 import { faHome, faCirclePlus, faPeopleCarryBox, faMagnifyingGlass, faPen, faTrash } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 
@@ -15,8 +17,6 @@ function HomePage() {
   const location = useLocation();
   const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
-  const [time, setTime] = useState('');
-  const [date, setDate] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editProduct, setEditProduct] = useState(null);
   const [precio, setPrecio] = useState(0);
@@ -38,23 +38,6 @@ function HomePage() {
 
     fetchProducts();
   }, [location.search]);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const now = new Date();
-      const formattedTime = now.toLocaleTimeString();
-      setTime(formattedTime);
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
-    const now = new Date();
-    const options = { day: 'numeric', month: 'long', year: 'numeric' };
-    const formattedDate = now.toLocaleDateString('es-ES', options);
-    setDate(formattedDate);
-  }, []);
 
   const openModal = () => {
     setIsModalOpen(true);
@@ -123,8 +106,6 @@ function HomePage() {
 
     closeModal();
 
-
-    // Ocultar el mensaje después de 3 segundos
     setTimeout(() => {
       setConfirmationMessage('');
     }, 3000);
@@ -146,15 +127,7 @@ function HomePage() {
 
   return (
     <div className="App flex flex-col h-screen">
-      <header className="bg-greyColor p-4">
-        <div className="flex justify-between items-center">
-        <button onClick={() => window.location.href = '/'}>
-          <p className="font-lobsterTwo text-letterColor font-extrabold text-5xl">Cremería Soco</p>
-        </button>
-          <p className="font-lobsterTwo font-semibold text-letterColor text-2xl">{date}</p>
-        </div>
-      </header>
-      
+       <Header title="Cremería Soco"/>
       {confirmationMessage && (
         <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white font-bold py-2 px-4 rounded-md shadow-lg transition-all duration-300">
           {confirmationMessage}
@@ -245,11 +218,7 @@ function HomePage() {
         </button>
       </div>
 
-      <footer className="bg-footColor p-4">
-        <div className="text-right font-bold text-black text-lg">
-          {time}
-        </div>
-      </footer>
+     <Footer/>
 
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
