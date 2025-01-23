@@ -26,6 +26,19 @@ function HomePage() {
     fetchProveedores();
   }, [location.search]);
 
+  const handleDelete = async (id) => {
+    const confirmDelete = window.confirm('¿Estás seguro de que deseas eliminar este proveedor?');
+    if (confirmDelete) {
+      try {
+        await axios.delete(`http://localhost:5000/api/proveedores/${id}`);
+        setProveedores(proveedores.filter(proveedor => proveedor._id !== id));
+      } catch (error) {
+        console.error('Error al eliminar el proveedor', error);
+      }
+    }
+  };
+
+
   const filteredProveedores = proveedores.filter(proveedor => {
     const nombreString = String(proveedor.nombreProveedor).toLowerCase();
     const searchLower = searchTerm.toLowerCase();
@@ -85,7 +98,9 @@ function HomePage() {
                         <button className='transition-all duration-300 hover:scale-110'>
                             <FontAwesomeIcon icon={faPen} className="mr-2 text-2xl font-bold" />
                         </button>
-                        <button className='transition-all duration-300 hover:scale-110'>
+                        <button 
+                        onClick={() => handleDelete(proveedor._id)}
+                        className='transition-all duration-300 hover:scale-110'>
                             <FontAwesomeIcon icon={faTrash} className="ml-3 text-2xl font-bold" />
                         </button>
                     </td>
