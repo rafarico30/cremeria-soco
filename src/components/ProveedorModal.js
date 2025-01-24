@@ -8,6 +8,7 @@ const ProveedorModal = ({ isOpen, onClose, onSave, proveedor }) => {
   const [telefono, setTelefono] = useState('');
   const [infoExtra, setInfoExtra] = useState('');
   const [allProductos, setAllProductos] = useState([]);
+  const [confirmationMessage, setConfirmationMessage] = useState('');
 
   useEffect(() => {
     const fetchProductos = async () => {
@@ -25,7 +26,10 @@ const ProveedorModal = ({ isOpen, onClose, onSave, proveedor }) => {
   useEffect(() => {
     if (proveedor) {
       setNombreProveedor(proveedor.nombreProveedor);
-      setProductos(proveedor.productos.map(product => ({ value: product._id, label: product.nombre })));
+      setProductos((proveedor.productos || []).map(productId => {
+        const product = allProductos.find(p => p.value === productId);
+        return product ? product : { value: productId, label: 'Producto no encontrado' };
+      }));
       setTelefono(proveedor.telefono);
       setInfoExtra(proveedor.infoExtra);
     } else {
@@ -34,19 +38,24 @@ const ProveedorModal = ({ isOpen, onClose, onSave, proveedor }) => {
       setTelefono('');
       setInfoExtra('');
     }
-  }, [proveedor]);
+  }, [proveedor, allProductos]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     const newProveedor = {
-        nombreProveedor,
-        productos: productos.map(product => product.value), // Enviar solo los IDs
-        telefono,
-        infoExtra
-      };
+      nombreProveedor,
+      productos: productos.map(product => product.value), // Enviar solo los IDs
+      telefono,
+      infoExtra
+    };
     await onSave(newProveedor);
-    onClose();
+    setConfirmationMessage(proveedor ? 'Proveedor editado satisfactoriamente' : 'Proveedor creado satisfactoriamente');
+    setTimeout(() => {
+      setConfirmationMessage('');
+      onClose();
+    }, 1000); // Ocultar el mensaje después de 3 segundos
   };
+
 
   if (!isOpen) return null;
 
@@ -114,6 +123,11 @@ const ProveedorModal = ({ isOpen, onClose, onSave, proveedor }) => {
             </button>
           </div>
         </form>
+        {confirmationMessage && (
+          <div className="mt-4 p-4 bg-green-100 text-green-700 rounded-md">
+            {confirmationMessage}
+          </div>
+           )}
       </div>
     </div>
   );
