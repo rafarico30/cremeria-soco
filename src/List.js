@@ -223,31 +223,31 @@ function HomePage() {
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded-lg w-1/2">
-            <h2 className="text-xl font-bold mb-4">{editProduct ? 'Editar Producto' : 'Agregar Producto'}</h2>
+            <h2 className="text-2xl font-bold mb-4">{editProduct ? 'Editar Producto' : 'Agregar Producto'}</h2>
             <form onSubmit={handleSave}>
               <div className="mb-4">
-                <label className="block text-lg font-semibold mb-2" htmlFor="name">Nombre</label>
+                <label className="block text-xl font-semibold mb-2" htmlFor="name">Nombre</label>
                 <input
                   type="text"
                   id="name"
                   name="name"
                   defaultValue={editProduct ? editProduct.nombre : ''}
-                  className="w-full bg-greyColor rounded-md px-4 py-2 border border-gray-300"
+                  className="w-full bg-white rounded-md px-4 py-2 border border-gray-300 text-xl"
                   required
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-lg font-semibold mb-2" htmlFor="description">Descripción</label>
+                <label className="block text-xl font-semibold mb-2" htmlFor="description">Descripción</label>
                 <input
                   type="text"
                   id="description"
                   name="description"
                   defaultValue={editProduct ? editProduct.descripcion : ''}
-                  className="w-full bg-greyColor rounded-md px-4 py-2 border border-gray-300"
+                  className="w-full rounded-md px-4 py-2 border border-gray-300 text-xl"
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-lg font-semibold mb-2" htmlFor="price">Precio</label>
+                <label className="block text-xl font-semibold mb-2" htmlFor="price">Precio</label>
                 <input
                   type="number"
                   id="price"
@@ -255,27 +255,27 @@ function HomePage() {
                   step="0.01"
                   defaultValue={editProduct ? editProduct.precio : ''}
                   onChange={(e) => setPrecio(Math.max(0, e.target.value))}
-                  className="w-full bg-greyColor rounded-md px-4 py-2 border border-gray-300"
+                  className="w-full bg-white rounded-md px-4 py-2 border border-gray-300 text-xl"
                   required
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-lg font-semibold mb-2" htmlFor="stock">Stock</label>
+                <label className="block text-xl font-semibold mb-2" htmlFor="stock">Stock</label>
                 <input
                   type="number"
                   id="stock"
                   name="stock"
                   defaultValue={editProduct ? editProduct.stock : ''}
-                  className="w-full bg-greyColor rounded-md px-4 py-2 border border-gray-300"
+                  className="w-full bg-white rounded-md px-4 py-2 border border-gray-300 text-xl"
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-lg font-semibold mb-2" htmlFor="ventaPorPieza">Se vende por:</label>
+                <label className="block text-xl font-semibold mb-2" htmlFor="ventaPorPieza">Se vende por:</label>
                 <select
                   id="ventaPorPieza"
                   name="ventaPorPieza"
                   defaultValue={editProduct ? editProduct.ventaPorPieza: ''}
-                  className="w-full bg-greyColor rounded-md px-4 py-2 border border-gray-300"
+                  className="w-full bg-white rounded-md px-4 py-2 border border-gray-300 text-xl"
                 >
                   <option value="pieza">Pieza</option>
                   <option value="kilogramos">Kilogramos</option>
@@ -283,12 +283,12 @@ function HomePage() {
               </div>
               
               <div className="mb-4">
-                    <label className="block text-lg font-semibold mb-2" htmlFor="category">Categoría</label>
+                    <label className="block text-xl font-semibold mb-2" htmlFor="category">Categoría</label>
                     <select
                       id="category"
                       name="category"
                       defaultValue={editProduct ? editProduct.categoria : ''}
-                      className="w-full bg-greyColor rounded-md px-4 py-2 border border-gray-300"
+                      className="w-full bg-white rounded-md px-4 py-2 border border-gray-300 text-xl"
                       required // Puedes hacer este campo requerido si es necesario
                     >
                       <option value="">Seleccionar categoría</option>
@@ -301,13 +301,13 @@ function HomePage() {
                   </div>
 
               <div className="flex justify-end space-x-4">
-                <button type="submit" className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                <button type="submit" className="bg-green-500 text-white font-bold px-6 py-4 rounded hover:bg-green-600 text-lg">
                   Guardar
                 </button>
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="bg-redColor text-white px-4 py-2 rounded hover:bg-red-400"
+                  className="bg-redColor text-white font-bold px-6 py-4 rounded hover:bg-red-400 text-lg"
                 >
                   Cerrar
                 </button>

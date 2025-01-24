@@ -4,12 +4,16 @@ import './App.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Header from "./components/Header";
 import Footer from "./components/Footer";
+import ProveedorModal from './components/ProveedorModal';
 import { faHome, faPeopleCarryBox, faMagnifyingGlass, faPen, faTrash} from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 
 function HomePage() {
   const [proveedores, setProveedores] = useState([]);
+  const [productos, setProductos] = useState({});
   const [searchTerm, setSearchTerm] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editProveedor, setEditProveedor] = useState(null);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -23,7 +27,21 @@ function HomePage() {
       }
     };
 
+    const fetchProductos = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/api/products');
+        const productosMap = response.data.reduce((acc, product) => {
+          acc[product._id] = product.nombre;
+          return acc;
+        }, {});
+        setProductos(productosMap);
+      } catch (error) {
+        console.error('Error al obtener los productos', error);
+      }
+    };
+
     fetchProveedores();
+    fetchProductos();
   }, [location.search]);
 
   const handleDelete = async (id) => {
@@ -37,6 +55,42 @@ function HomePage() {
       }
     }
   };
+
+  const handleSave = async (proveedor) => {
+    if (editProveedor) {
+      // Editar proveedor existente
+      try {
+        const response = await axios.put(`http://localhost:5000/api/proveedores/${editProveedor._id}`, proveedor);
+        setProveedores(proveedores.map(p => p._id === editProveedor._id ? response.data : p));
+      } catch (error) {
+        console.error('Error al editar el proveedor', error);
+      }
+    } else {
+      // Crear nuevo proveedor
+      try {
+        const response = await axios.post('http://localhost:5000/api/proveedores', proveedor);
+        setProveedores([...proveedores, response.data]);
+      } catch (error) {
+        console.error('Error al crear el proveedor', error);
+      }
+    }
+  };
+
+  const openModal = () => {
+    setEditProveedor(null);
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (proveedor) => {
+    setEditProveedor(proveedor);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setEditProveedor(null);
+  };
+  
 
 
   const filteredProveedores = proveedores.filter(proveedor => {
@@ -53,7 +107,7 @@ function HomePage() {
         <div className='flex justify-between items-center'>
           <div className='flex space-x-4'>
             <button
-              onClick={() => {}}
+              onClick={openModal}
               className='bg-white font-semibold text-3xl px-8 py-5 flex items-center transition-all duration-300 hover:scale-110'
             >
               <FontAwesomeIcon icon={faPeopleCarryBox} className="mr-2 text-4xl font-bold" />
@@ -91,11 +145,17 @@ function HomePage() {
               filteredProveedores.map((proveedor) => (
                 <tr key={proveedor._id}>
                   <td className='border border-black px-4 py-2'>{proveedor.nombreProveedor}</td>
-                  <td className='border border-black px-4 py-2'>{proveedor.productos}</td>
-                  <td className='border border-black px-4 py-2'>{proveedor.telefono}</td>
-                  <td className='border border-black px-4 py-2'>{proveedor.infoExtra}</td>
                   <td className='border border-black px-4 py-2'>
-                        <button className='transition-all duration-300 hover:scale-110'>
+                    {(proveedor.productos || []).map(productId => productos[productId]).join(', ')}
+                  </td>
+                  <td className='border border-black px-4 py-2'>{proveedor.telefono}</td>
+                  <td className='border border-black px-4 py-2'>
+                    {proveedor.infoExtra ? proveedor.infoExtra : "Sin información"}
+                  </td>
+                  <td className='border border-black px-4 py-2'>
+                        <button 
+                        onClick={() => openEditModal(proveedor)}
+                        className='transition-all duration-300 hover:scale-110'>
                             <FontAwesomeIcon icon={faPen} className="mr-2 text-2xl font-bold" />
                         </button>
                         <button 
@@ -124,6 +184,13 @@ function HomePage() {
           Inicio
         </button>
       </div>
+
+      <ProveedorModal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        onSave={handleSave}
+        proveedor={editProveedor}
+      />
 
       <Footer />
     </div>
