@@ -9,7 +9,7 @@ import axios from 'axios';
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBoxesStacked, faCalculator, faXmark, faSearch, faCheese, faCheck, faPeopleCarryBox } from '@fortawesome/free-solid-svg-icons';
+import { faBoxesStacked, faCalculator, faXmark, faSearch, faCheese, faCheck, faPeopleCarryBox, faUserTie, faMoneyBillWave} from '@fortawesome/free-solid-svg-icons';
 
 function MainPage() {
   
@@ -283,25 +283,37 @@ function MainPage() {
         <Header title="Cremería Soco" />
       <div className="bg-greyColor2 flex justify-center items-center space-x-8 p-4">
         <button 
-          className="border-2 border-black rounded-full px-3 py-1 text-black hover:bg-gray-200 transition duration-300"
+          className="border-2 border-black rounded-full px-3 py-1 text-black hover:bg-gray-200 transition duration-300 text-lg font-bold"
           onClick={() => navigate('/inventory')}
         >
           Inventario productos
-          <FontAwesomeIcon icon={faBoxesStacked} className="ml-3 text-lg" />
+          <FontAwesomeIcon icon={faBoxesStacked} className="ml-3 text-xl" />
         </button>
 
-        <button className="border-2 border-black rounded-full px-16 py-1 text-black hover:bg-gray-200 transition duration-300"
+        <button className="border-2 border-black rounded-full px-16 py-1 text-black hover:bg-gray-200 transition duration-300 text-lg font-bold"
         onClick={() => navigate('/ventas')}
         >
           Ventas
-          <FontAwesomeIcon icon={faCalculator} className="ml-4 text-lg" />
+          <FontAwesomeIcon icon={faCalculator} className="ml-4 text-xl" />
         </button>
 
-        <button className="border-2 border-black rounded-full px-16 py-1 text-black hover:bg-gray-200 transition duration-300"
+        <button className="border-2 border-black rounded-full px-16 py-1 text-black hover:bg-gray-200 transition duration-300 text-lg font-bold"
         onClick={() => navigate('/proveedores')}
         >
           Proveedores
-          <FontAwesomeIcon icon={faPeopleCarryBox} className="ml-4 text-lg" />
+          <FontAwesomeIcon icon={faPeopleCarryBox} className="ml-4 text-xl" />
+        </button>
+        <button className="border-2 border-black rounded-full px-16 py-1 text-black hover:bg-gray-200 transition duration-300 text-lg font-bold"
+        onClick={() => navigate('/')}
+        >
+          Empleados
+          <FontAwesomeIcon icon={faUserTie} className="ml-4 text-xl"/>
+        </button>
+        <button className="border-2 border-black rounded-full px-16 py-1 text-black hover:bg-gray-200 transition duration-300 text-lg font-bold"
+        onClick={() => navigate('/')}
+        >
+          Reportes
+          <FontAwesomeIcon icon={faMoneyBillWave} className="ml-4 text-xl" />
         </button>
       </div>
 
@@ -310,7 +322,7 @@ function MainPage() {
       <div className="bg-white border border-black p-4 flex items-center relative">
 
       <div className="flex items-center ml-6">
-        <h2 className="font-bold">Cantidad:</h2>
+        <h2 className="font-bold text-xl">Cantidad:</h2>
         <input 
           type="number" 
           className="border border-black rounded-lg p-2 ml-4 w-20"
@@ -324,7 +336,7 @@ function MainPage() {
           <FontAwesomeIcon icon={faCheese} className="ml-2 text-2xl" />
         </div>
         
-        <h2 className="font-bold ml-6">Nombre del producto:</h2>
+        <h2 className="font-bold ml-6 text-xl">Nombre del producto:</h2>
         <div className="relative">
           <input 
             type="text" 
@@ -336,7 +348,7 @@ function MainPage() {
           <FontAwesomeIcon icon={faSearch} className="ml-2 text-2xl" />
 
           {showSearchResults && filteredProducts.length > 0 && (
-            <div className="absolute z-10 bg-white border border-gray-300 rounded-lg shadow-lg mt-1 max-h-60 overflow-auto">
+            <div className="absolute z-10 bg-white border border-gray-300 rounded-lg shadow-lg mt-1 max-h-60 overflow-auto text-xl">
              {filteredProducts.map((product, index) => (
                <div
                key={product._id}
@@ -354,7 +366,7 @@ function MainPage() {
 
       <div className="flex-grow bg-white">
         <div className="overflow-x-auto">
-          <table className="min-w-full border-separate border-spacing-0">
+          <table className="min-w-full border-separate border-spacing-0 text-xl">
             <thead>
               <tr className="bg-footColor">
                 <th className="border border-black p-2">Clave</th>
