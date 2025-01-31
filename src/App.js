@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
 import Inventory from './inventory'; 
+import Empleados from './empleados';
 import List from './List';
 import Ventas from './ventas'
 import Proveedores from './proveedores'
@@ -304,7 +305,7 @@ function MainPage() {
           <FontAwesomeIcon icon={faPeopleCarryBox} className="ml-4 text-xl" />
         </button>
         <button className="border-2 border-black rounded-full px-16 py-1 text-black hover:bg-gray-200 transition duration-300 text-lg font-bold"
-        onClick={() => navigate('/')}
+        onClick={() => navigate('/empleados')}
         >
           Empleados
           <FontAwesomeIcon icon={faUserTie} className="ml-4 text-xl"/>
@@ -455,6 +456,7 @@ function App() {
       <Route path="/list" element={<List/>} />
       <Route path="/ventas" element={<Ventas/>} />
       <Route path="/proveedores" element={<Proveedores/>} />
+      <Route path="/empleados" element={<Empleados/>} />
     </Routes>
   );
 }

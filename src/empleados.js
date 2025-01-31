@@ -4,26 +4,26 @@ import './App.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Header from "./components/Header";
 import Footer from "./components/Footer";
-import ProveedorModal from './components/ProveedorModal';
-import { faHome, faPeopleCarryBox, faMagnifyingGlass, faPen, faTrash} from '@fortawesome/free-solid-svg-icons';
+import EmpleadoModal from './components/EmpleadoModal';
+import { faHome, faPeopleCarryBox, faMagnifyingGlass, faPen, faTrash, faUserPlus} from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 
 function HomePage() {
-  const [proveedores, setProveedores] = useState([]);
+  const [empleados, setEmpleados] = useState([]);
   const [productos, setProductos] = useState({});
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editProveedor, setEditProveedor] = useState(null);
+  const [editEmpleado, setEditEmpleado] = useState(null);
   const location = useLocation();
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchProveedores = async () => {
+    const fetchEmpleados = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/proveedores');
-        setProveedores(response.data);
+        const response = await axios.get('http://localhost:5000/api/empleados');
+        setEmpleados(response.data);
       } catch (error) {
-        console.error('Error al obtener los proveedores', error);
+        console.error('Error al obtener los empleados', error);
       }
     };
 
@@ -40,61 +40,61 @@ function HomePage() {
       }
     };
 
-    fetchProveedores();
+    fetchEmpleados();
     fetchProductos();
   }, [location.search]);
 
   const handleDelete = async (id) => {
-    const confirmDelete = window.confirm('¿Estás seguro de que deseas eliminar este proveedor?');
+    const confirmDelete = window.confirm('¿Estás seguro de que deseas eliminar este empleado?');
     if (confirmDelete) {
       try {
-        await axios.delete(`http://localhost:5000/api/proveedores/${id}`);
-        setProveedores(proveedores.filter(proveedor => proveedor._id !== id));
+        await axios.delete(`http://localhost:5000/api/empleados/${id}`);
+        setEmpleados(empleados.filter(empleado => empleado._id !== id));
       } catch (error) {
-        console.error('Error al eliminar el proveedor', error);
+        console.error('Error al eliminar el empleado', error);
       }
     }
   };
 
-  const handleSave = async (proveedor) => {
-    if (editProveedor) {
-      // Editar proveedor existente
+  const handleSave = async (empleado) => {
+    if (editEmpleado) {
+      // Editar empleado existente
       try {
-        const response = await axios.put(`http://localhost:5000/api/proveedores/${editProveedor._id}`, proveedor);
-        setProveedores(proveedores.map(p => p._id === editProveedor._id ? response.data : p));
+        const response = await axios.put(`http://localhost:5000/api/empleados/${editEmpleado._id}`, empleado);
+        setEmpleados(empleados.map(p => p._id === editEmpleado._id ? response.data : p));
       } catch (error) {
-        console.error('Error al editar el proveedor', error);
+        console.error('Error al editar el empleado', error);
       }
     } else {
-      // Crear nuevo proveedor
+      // Crear nuevo empleado
       try {
-        const response = await axios.post('http://localhost:5000/api/proveedores', proveedor);
-        setProveedores([...proveedores, response.data]);
+        const response = await axios.post('http://localhost:5000/api/empleados', empleado);
+        setEmpleados([...empleados, response.data]);
       } catch (error) {
-        console.error('Error al crear el proveedor', error);
+        console.error('Error al crear el empleado', error);
       }
     }
   };
 
   const openModal = () => {
-    setEditProveedor(null);
+    setEditEmpleado(null);
     setIsModalOpen(true);
   };
 
-  const openEditModal = (proveedor) => {
-    setEditProveedor(proveedor);
+  const openEditModal = (empleado) => {
+    setEditEmpleado(empleado);
     setIsModalOpen(true);
   };
 
   const closeModal = () => {
     setIsModalOpen(false);
-    setEditProveedor(null);
+    setEditEmpleado(null);
   };
   
 
 
-  const filteredProveedores = proveedores.filter(proveedor => {
-    const nombreString = String(proveedor.nombreProveedor).toLowerCase();
+  const filteredEmpleados = empleados.filter(empleado => {
+    const nombreString = String(empleado.nombreEmpleado).toLowerCase();
     const searchLower = searchTerm.toLowerCase();
     return nombreString.includes(searchLower);
   });
@@ -110,8 +110,8 @@ function HomePage() {
               onClick={openModal}
               className='bg-white font-semibold text-3xl px-8 py-5 flex items-center transition-all duration-300 hover:scale-110'
             >
-              <FontAwesomeIcon icon={faPeopleCarryBox} className="mr-2 text-4xl font-bold" />
-              Nuevo Proveedor
+              <FontAwesomeIcon icon={faUserPlus} className="mr-2 text-4xl font-bold" />
+              Nuevo Empleado
             </button>
           </div>
 
@@ -133,33 +133,33 @@ function HomePage() {
         <table className='min-w-full text-m'>
           <thead>
             <tr>
-              <th className='border border-black px-4 py-2 text-left'>Nombre del proveedor</th>
-              <th className='border border-black px-4 py-2 text-left'>Producto(s)</th>
+              <th className='border border-black px-4 py-2 text-left'>Nombre del empleado</th>
+              <th className='border border-black px-4 py-2 text-left'>Puesto</th>
               <th className='border border-black px-4 py-2 text-left'>Teléfono</th>
               <th className='border border-black px-4 py-2 text-left'>Información extra</th>
+              <th className='border border-black px-4 py-2 text-left'>Fecha de ingreso</th>
               <th className='border border-black px-4 py-2 text-left'></th>
             </tr>
           </thead>
           <tbody>
-            {filteredProveedores.length > 0 ? (
-              filteredProveedores.map((proveedor) => (
-                <tr key={proveedor._id}>
-                  <td className='border border-black px-4 py-2'>{proveedor.nombreProveedor}</td>
+            {filteredEmpleados.length > 0 ? (
+              filteredEmpleados.map((empleado) => (
+                <tr key={empleado._id}>
+                  <td className='border border-black px-4 py-2'>{empleado.nombreEmpleado}</td>
+                  <td className='border border-black px-4 py-2'>{empleado.puesto}</td>
+                  <td className='border border-black px-4 py-2'>{empleado.telefono}</td>
                   <td className='border border-black px-4 py-2'>
-                    {(proveedor.productos || []).map(productId => productos[productId]).join(', ')}
+                    {empleado.infoExtra ? empleado.infoExtra : "Sin información"}
                   </td>
-                  <td className='border border-black px-4 py-2'>{proveedor.telefono}</td>
-                  <td className='border border-black px-4 py-2'>
-                    {proveedor.infoExtra ? proveedor.infoExtra : "Sin información"}
-                  </td>
+                  <td className='border border-black px-4 py-2'>{new Date(empleado.fechaDeIngreso).toLocaleDateString()}</td>
                   <td className='border border-black px-4 py-2'>
                         <button 
-                        onClick={() => openEditModal(proveedor)}
+                        onClick={() => openEditModal(empleado)}
                         className='transition-all duration-300 hover:scale-110'>
                             <FontAwesomeIcon icon={faPen} className="mr-2 text-2xl font-bold" />
                         </button>
                         <button 
-                        onClick={() => handleDelete(proveedor._id)}
+                        onClick={() => handleDelete(empleado._id)}
                         className='transition-all duration-300 hover:scale-110'>
                             <FontAwesomeIcon icon={faTrash} className="ml-3 text-2xl font-bold" />
                         </button>
@@ -168,7 +168,7 @@ function HomePage() {
               ))
             ) : (
               <tr>
-                <td colSpan="4" className="text-center py-4">No hay proveedores para mostrar</td>
+                <td colSpan="4" className="text-center py-4">No hay empleados para mostrar</td>
               </tr>
             )}
           </tbody>
@@ -185,11 +185,11 @@ function HomePage() {
         </button>
       </div>
 
-      <ProveedorModal
+      <EmpleadoModal
         isOpen={isModalOpen}
         onClose={closeModal}
         onSave={handleSave}
-        proveedor={editProveedor}
+        empleado={editEmpleado}
       />
 
       <Footer />
