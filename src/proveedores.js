@@ -5,7 +5,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import ProveedorModal from './components/ProveedorModal';
-import { faHome, faPeopleCarryBox, faMagnifyingGlass, faPen, faTrash} from '@fortawesome/free-solid-svg-icons';
+import CompraModal from './components/CompraModal';
+import { faHome, faPeopleCarryBox, faMagnifyingGlass, faPen, faTrash, faCartPlus} from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 
 function HomePage() {
@@ -14,6 +15,8 @@ function HomePage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editProveedor, setEditProveedor] = useState(null);
+  const [editCompra, setEditCompra] = useState(null);
+  const [isCompraModalOpen, setIsCompraModalOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -56,6 +59,17 @@ function HomePage() {
     }
   };
 
+  const handleSaveCompra = async (compra) => {
+    // Lógica para guardar la compra
+    try {
+      const response = await axios.post('http://localhost:5000/api/compras', compra);
+      // Aquí puedes actualizar el estado de compras si lo necesitas
+      console.log('Compra guardada:', response.data);
+    } catch (error) {
+      console.error('Error al guardar la compra', error);
+    }
+  };
+
   const handleSave = async (proveedor) => {
     if (editProveedor) {
       // Editar proveedor existente
@@ -91,7 +105,14 @@ function HomePage() {
     setEditProveedor(null);
   };
   
+  const openCompraModal = () => {
+    setEditCompra(null);
+    setIsCompraModalOpen(true);
+  };
 
+  const closeCompraModal = () => {
+    setIsCompraModalOpen(false);
+  };
 
   const filteredProveedores = proveedores.filter(proveedor => {
     const nombreString = String(proveedor.nombreProveedor).toLowerCase();
@@ -104,30 +125,37 @@ function HomePage() {
       <Header title="Cremería Soco" />
 
       <div className='bg-white p-4'>
-        <div className='flex justify-between items-center'>
-          <div className='flex space-x-4'>
-            <button
-              onClick={openModal}
-              className='bg-white font-semibold text-3xl px-8 py-5 flex items-center transition-all duration-300 hover:scale-110'
-            >
-              <FontAwesomeIcon icon={faPeopleCarryBox} className="mr-2 text-4xl font-bold" />
-              Nuevo Proveedor
-            </button>
-          </div>
+  <div className='flex justify-between items-center'>
+    <div className='flex space-x-4'>
+      <button
+        onClick={openModal}
+        className='bg-white font-semibold text-3xl px-8 py-5 flex items-center transition-all duration-300 hover:scale-110'
+      >
+        <FontAwesomeIcon icon={faPeopleCarryBox} className="mr-2 text-4xl font-bold" />
+        Nuevo Proveedor
+      </button>
+      <button
+        onClick={openCompraModal}
+        className='bg-white font-semibold text-3xl px-8 py-5 flex items-center transition-all duration-300 hover:scale-110'
+      >
+        <FontAwesomeIcon icon={faCartPlus} className="mr-2 text-4xl font-bold" />
+        Agregar producto
+      </button>
+    </div>
 
-          <div className='flex items-center space-x-4'>
-            <FontAwesomeIcon icon={faMagnifyingGlass} className="text-3xl font-bold" />
-            <p className='font-semibold text-2xl'>Buscar</p>
-            <input 
-              type="text" 
-              className='bg-greyColor rounded-md px-4 py-2' 
-              value={searchTerm} 
-              onChange={(e) => setSearchTerm(e.target.value)} 
-              placeholder='Buscar por nombre'
-            />
-          </div>
-        </div>
-      </div>
+    <div className='flex items-center space-x-4'>
+      <FontAwesomeIcon icon={faMagnifyingGlass} className="text-3xl font-bold" />
+      <p className='font-semibold text-2xl'>Buscar</p>
+      <input 
+        type="text" 
+        className='bg-greyColor rounded-md px-4 py-2' 
+        value={searchTerm} 
+        onChange={(e) => setSearchTerm(e.target.value)} 
+        placeholder='Buscar por nombre'
+      />
+    </div>
+  </div>
+</div>
 
       <div className='bg-white h-screen overflow-auto'>
         <table className='min-w-full text-m'>
@@ -190,6 +218,13 @@ function HomePage() {
         onClose={closeModal}
         onSave={handleSave}
         proveedor={editProveedor}
+      />
+
+      <CompraModal
+        isOpen={isCompraModalOpen}
+        onClose={closeCompraModal}
+        onSave={handleSaveCompra}
+        compra={editCompra}
       />
 
       <Footer />

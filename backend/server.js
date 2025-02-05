@@ -4,6 +4,7 @@ const cors = require('cors');
 const productsRoutes = require('./routes/products');
 const proveedoresRoutes = require('./routes/proveedores');
 const empleadosRoutes = require('./routes/empleados');
+const comprasRoutes = require('./routes/compras');
 
 const app = express();
 const port = 5000;
@@ -24,6 +25,7 @@ mongoose.connect('mongodb://localhost:27017/cremeriaSoco', {
 app.use('/api', productsRoutes);
 app.use('/api', proveedoresRoutes);
 app.use('/api', empleadosRoutes);
+app.use('/api', comprasRoutes);
 
 app.listen(port, () => {
   console.log(`Servidor corriendo en http://localhost:${port}`);

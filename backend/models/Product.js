@@ -7,7 +7,8 @@ const productSchema = new mongoose.Schema({
   precio: { type: Number, required: true },
   stock: { type: Number, required: true },
   categoria: { type: String, required: true },
-  ventaPorPieza: { type: Boolean, required: true }
+  ventaPorPieza: { type: Boolean, required: true },
+  precioProveedor: { type: Number, default: 0 }
 });
 
 productSchema.pre('save', async function(next) {

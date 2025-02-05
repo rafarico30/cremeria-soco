@@ -32,7 +32,7 @@ router.get('/products', async (req, res) => {
 // Ruta para actualizar un producto existente (PUT)
 router.put('/products/:id', async (req, res) => {
   const { id } = req.params;
-  const { nombre, descripcion, precio, stock, categoria, ventaPorPieza } = req.body;
+  const { nombre, descripcion, precio, stock, categoria, ventaPorPieza, precioProveedor} = req.body;
 
   try {
     const updatedProduct = await Product.findByIdAndUpdate(
@@ -44,6 +44,7 @@ router.put('/products/:id', async (req, res) => {
         stock,
         categoria,
         ventaPorPieza,
+        precioProveedor,
       },
       { new: true }
     );
@@ -72,6 +73,7 @@ router.post('/products', async (req, res) => {
       stock: parseInt(stock),
       categoria,
       ventaPorPieza: ventaPorPieza === 'pieza', // True si es 'pieza', false si es 'kilogramos'
+      precioProveedor,
     });
 
     // Guardar el producto en la base de datos

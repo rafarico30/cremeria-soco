@@ -21,7 +21,7 @@ function HomePage() {
   const [editProduct, setEditProduct] = useState(null);
   const [precio, setPrecio] = useState(0);
   const [stock, setStock] = useState(0);
-
+  
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
     const categoryFromParams = queryParams.get('category');
@@ -64,7 +64,8 @@ function HomePage() {
       precio: formData.get('price'),
       stock: formData.get('stock'),
       categoria: formData.get('category'),
-      ventaPorPieza: formData.get('ventaPorPieza') === 'pieza', // Esto dependerá de tu lógica
+      ventaPorPieza: formData.get('ventaPorPieza') === 'pieza',
+      precioProveedor: formData.get('precioProveedor'), // Esto dependerá de tu lógica
     };
     
 
@@ -174,6 +175,7 @@ function HomePage() {
               <th className='border border-black px-4 py-2 text-left'>Nombre del producto</th>
               <th className='border border-black px-4 py-2 text-left'>Descripción del producto</th>
               <th className='border border-black px-4 py-2 text-left'>Precio</th>
+              <th className='border border-black px-4 py-2 text-left'>Precio Proveedor</th>
               <th className='border border-black px-4 py-2 text-left'>Stock</th>
               <th className='border border-black px-4 py-2 text-left'></th>
             </tr>
@@ -186,6 +188,7 @@ function HomePage() {
                   <td className='border border-black px-4 py-2'>{product.nombre}</td>
                   <td className='border border-black px-4 py-2'>{product.descripcion}</td>
                   <td className='border border-black px-4 py-2'>${product.precio}</td>
+                  <td className='border border-black px-4 py-2'>${product.precioProveedor}</td>
                   <td className={`border border-black px-4 py-2 ${product.stock === 0 ? 'text-red-500 font-bold' : ''}`}>
                     {product.stock}
                   </td>
@@ -254,6 +257,19 @@ function HomePage() {
                   name="price"
                   step="0.01"
                   defaultValue={editProduct ? editProduct.precio : ''}
+                  onChange={(e) => setPrecio(Math.max(0, e.target.value))}
+                  className="w-full bg-white rounded-md px-4 py-2 border border-gray-300 text-xl"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-xl font-semibold mb-2" htmlFor="precioProveedor">Precio Proveedor</label>
+                <input
+                  type="number"
+                  id="precioProveedor"
+                  name="precioProveedor"
+                  step="0.01"
+                  defaultValue={editProduct ? editProduct.precioProveedor : ''}
                   onChange={(e) => setPrecio(Math.max(0, e.target.value))}
                   className="w-full bg-white rounded-md px-4 py-2 border border-gray-300 text-xl"
                   required
