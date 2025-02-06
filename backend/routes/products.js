@@ -1,92 +1,119 @@
 const express = require('express');
 const router = express.Router();
+const { body, validationResult } = require('express-validator');
+const Product = require('../models/Product');
+const Venta = require('../models/Venta');
 const PDFDocument = require('pdfkit');
 const fs = require('fs');
 const path = require('path');
-const Product = require('../models/Product');
-const Venta = require('../models/Venta');
 
-// Ruta para obtener productos (GET)
+// Función para truncar texto
+const truncateText = (text, maxLength) => {
+  if (text.length > maxLength) {
+    return text.substring(0, maxLength) + '...';
+  }
+  return text;
+};
+
+// Ruta para crear un nuevo producto (POST)
+router.post('/products', [
+  body('claveProducto').isNumeric().withMessage('La clave del producto debe ser un número'),
+  body('nombre').notEmpty().withMessage('El nombre es requerido'),
+  body('precio').isNumeric().withMessage('El precio debe ser un número'),
+  body('stock').isNumeric().withMessage('El stock debe ser un número'),
+  body('categoria').notEmpty().withMessage('La categoría es requerida'),
+  body('ventaPorPieza').isBoolean().withMessage('La venta por pieza debe ser un valor booleano')
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  try {
+    const { claveProducto, nombre, descripcion, precio, stock, categoria, ventaPorPieza, precioProveedor } = req.body;
+    const nuevoProducto = new Product({
+      claveProducto,
+      nombre,
+      descripcion,
+      precio,
+      stock,
+      categoria,
+      ventaPorPieza,
+      precioProveedor
+    });
+
+    const productoGuardado = await nuevoProducto.save();
+    res.status(201).json(productoGuardado);
+  } catch (err) {
+    console.error('Error al crear el producto:', err);
+    res.status(500).json({ error: 'Error al crear el producto', details: err.message });
+  }
+});
+
+// Ruta para obtener todos los productos (GET)
 router.get('/products', async (req, res) => {
   try {
-    const { searchTerm } = req.query;
-
-    let query = {};
-
-    if (searchTerm) {
-      const isNumeric = !isNaN(searchTerm);
-      const sanitizedSearchTerm = searchTerm.replace(/[\\^$.*+?()[\]{}|]/g, '\\$&');
-      query = isNumeric
-        ? { claveProducto: parseInt(searchTerm) }
-        : { nombre: { $regex: searchTerm, $options: 'i' } };
-    }
-
-    const products = await Product.find(query);
-    res.json(products);
+    const productos = await Product.find();
+    res.json(productos);
   } catch (err) {
-    console.error(err);
+    console.error('Error al obtener los productos:', err);
     res.status(500).json({ error: 'Error al obtener los productos' });
   }
 });
 
-// Ruta para actualizar un producto existente (PUT)
-router.put('/products/:id', async (req, res) => {
-  const { id } = req.params;
-  const { nombre, descripcion, precio, stock, categoria, ventaPorPieza, precioProveedor} = req.body;
-
-  try {
-    const updatedProduct = await Product.findByIdAndUpdate(
-      id,
-      {
-        nombre,
-        descripcion,
-        precio,
-        stock,
-        categoria,
-        ventaPorPieza,
-        precioProveedor,
-      },
-      { new: true }
-    );
-    res.json(updatedProduct);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error al actualizar el producto' });
+// Ruta para actualizar un producto (PUT)
+router.put('/products/:id', [
+  body('claveProducto').isNumeric().withMessage('La clave del producto debe ser un número'),
+  body('nombre').notEmpty().withMessage('El nombre es requerido'),
+  body('precio').isNumeric().withMessage('El precio debe ser un número'),
+  body('stock').isNumeric().withMessage('El stock debe ser un número'),
+  body('categoria').notEmpty().withMessage('La categoría es requerida'),
+  body('ventaPorPieza').isBoolean().withMessage('La venta por pieza debe ser un valor booleano')
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
   }
-});
-
-// Ruta para guardar un nuevo producto (POST)
-router.post('/products', async (req, res) => {
-  const { nombre, descripcion, precio, stock, categoria, ventaPorPieza } = req.body;
 
   try {
-    // Validación básica
-    if (!nombre || !precio || !stock || !categoria || typeof ventaPorPieza === 'undefined') {
-      return res.status(400).json({ error: 'Faltan campos obligatorios' });
-    }
-
-    // Crear un nuevo producto
-    const newProduct = new Product({
+    const { claveProducto, nombre, descripcion, precio, stock, categoria, ventaPorPieza, precioProveedor } = req.body;
+    const productoActualizado = await Product.findByIdAndUpdate(req.params.id, {
+      claveProducto,
       nombre,
       descripcion,
-      precio: parseFloat(precio),
-      stock: parseInt(stock),
+      precio,
+      stock,
       categoria,
-      ventaPorPieza: ventaPorPieza === 'pieza', // True si es 'pieza', false si es 'kilogramos'
-      precioProveedor,
-    });
+      ventaPorPieza,
+      precioProveedor
+    }, { new: true });
 
-    // Guardar el producto en la base de datos
-    const savedProduct = await newProduct.save();
+    if (!productoActualizado) {
+      return res.status(404).json({ error: 'Producto no encontrado' });
+    }
 
-    // Enviar el producto guardado como respuesta
-    res.status(201).json(savedProduct);
+    res.json(productoActualizado);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error al guardar el producto', details: err.message });
+    console.error('Error al actualizar el producto:', err);
+    res.status(500).json({ error: 'Error al actualizar el producto', details: err.message });
   }
 });
 
+// Ruta para eliminar un producto (DELETE)
+router.delete('/products/:id', async (req, res) => {
+  try {
+    const productoEliminado = await Product.findByIdAndDelete(req.params.id);
+
+    if (!productoEliminado) {
+      return res.status(404).json({ error: 'Producto no encontrado' });
+    }
+
+    res.json({ message: 'Producto eliminado correctamente' });
+  } catch (err) {
+    console.error('Error al eliminar el producto:', err);
+    res.status(500).json({ error: 'Error al eliminar el producto', details: err.message });
+  }
+});
 
 // Ruta para registrar una nueva venta (POST)
 router.post('/ventas', async (req, res) => {
@@ -110,7 +137,7 @@ router.post('/ventas', async (req, res) => {
     const ventaGuardada = await nuevaVenta.save();
 
     // Cambia esta ruta a un directorio simple en tu proyecto para hacer pruebas
-    const ticketDir = path.join(__dirname, 'tickets');  // Usamos el directorio local
+    const ticketDir = path.join(__dirname, 'tickets', 'ventas');  // Usamos el directorio local
 
     // Verificar si la carpeta 'tickets' existe, si no, crearla
     if (!fs.existsSync(ticketDir)) {
@@ -124,22 +151,69 @@ router.post('/ventas', async (req, res) => {
     const filePath = path.join(ticketDir, `ticket_venta_${ventaGuardada._id}.pdf`);
     console.log('Guardando PDF en:', filePath);
 
+    const ventaPopulada = await Venta.findById(ventaGuardada._id).populate('productos.producto');
+
     // Crear el documento PDF
-    const doc = new PDFDocument();
+    const doc = new PDFDocument({ margin: 50 });
     const writeStream = fs.createWriteStream(filePath);
 
     // Agregar contenido al PDF
     doc.pipe(writeStream);
-    doc.fontSize(20).text('Resumen de Venta', { align: 'center' });
-    doc.fontSize(12).text(`Venta ID: ${ventaGuardada._id}`);
-    doc.text(`Total: $${ventaGuardada.total}`);
-    doc.text(`Pago del cliente: $${ventaGuardada.pagoCliente}`);
-    doc.text(`Cambio: $${ventaGuardada.cambio}`);
 
-    doc.text('\nProductos:');
-    ventaGuardada.productos.forEach((producto, index) => {
-      doc.text(`${index + 1}. ${producto.producto} - Cantidad: ${producto.cantidad} - Precio: $${producto.precioUnitario}`);
+    // Encabezado
+    doc.font('Times-Bold').fontSize(35).text('Cremería Soco', { align: 'center' });
+    doc.font('Times-Roman').fontSize(20).text('C. Nicolás Bravo 262, Centro histórico de Morelia', { align: 'center' });
+    doc.font('Times-Roman').fontSize(20).text('4431019999', { align: 'center' });
+    doc.moveDown();
+    doc.fontSize(20).text('---------------------------------------------------------------------', { align: 'center' });
+    doc.moveDown();
+    doc.fontSize(20).text('RECIBO DE VENTA', { align: 'center' });
+    doc.moveDown();
+    doc.fontSize(20).text('---------------------------------------------------------------------', { align: 'center' });
+    doc.moveDown();
+    doc.fontSize(18).text(`Venta ID: ${ventaGuardada._id}`);
+    doc.text(`Total: $${total}`);
+    doc.text(`Pago del cliente: $${pagoCliente}`);
+    doc.text(`Cambio: $${cambio}`);
+    const fechaHoraActual = new Date().toLocaleString();
+    doc.text(`Fecha: ${fechaHoraActual}`);
+    doc.moveDown();
+
+    // Tabla de productos
+    const tableTop = doc.y;
+    const descriptionX = 50;
+    const quantityX = 250;
+    const priceX = 350;
+    const totalX = 450;
+
+    doc.font('Times-Bold');
+    doc.text('Descripción', descriptionX, tableTop);
+    doc.text('Cantidad', quantityX, tableTop);
+    doc.text('Precio', priceX, tableTop);
+    doc.text('Total', totalX, tableTop);
+    doc.moveDown();
+    doc.font('Times-Roman');
+
+    ventaPopulada.productos.forEach((item) => {
+      const y = doc.y;
+      const truncatedName = truncateText(item.producto.nombre, 15); // Truncar el nombre del producto a 15 caracteres
+      doc.text(truncatedName, descriptionX, y);
+      doc.text(item.cantidad.toString(), quantityX, y);
+      doc.text(`$${item.precioUnitario.toFixed(2)}`, priceX, y);
+      doc.text(`$${(item.precioUnitario * item.cantidad).toFixed(2)}`, totalX, y);
+      doc.moveDown();
     });
+
+    doc.moveDown(2); // Baja un par de líneas para asegurarte de que no esté encima de la tabla
+    doc.text('', 50, doc.y); 
+
+    // Total de la venta
+    doc.fontSize(20).text('----------------------------------------------------------------------', { align: 'center' });
+    doc.fontSize(20).text(`Total de la Venta: $${total.toFixed(2)}`, 50, doc.y, { align: 'left' });
+
+    // Agradecimiento (alineado a la izquierda)
+    doc.moveDown(1);
+    doc.font('Times-Bold').fontSize(20).text('¡Gracias por su compra!', 50, doc.y, { align: 'center' });
 
     // Finalizar el documento PDF
     doc.end();
@@ -158,13 +232,13 @@ router.post('/ventas', async (req, res) => {
   }
 });
 
-// Ruta para obtener las ventas
+// Ruta para obtener las ventas (GET)
 router.get('/ventas', async (req, res) => {
   try {
     const ventas = await Venta.find();
     res.json(ventas);
   } catch (err) {
-    console.error(err);
+    console.error('Error al obtener las ventas:', err);
     res.status(500).json({ error: 'Error al obtener las ventas' });
   }
 });
