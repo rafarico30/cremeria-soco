@@ -34,7 +34,7 @@ router.post('/compras', [
     const nuevaCompra = new Compra({
       productos,
       proveedor,
-      fecha
+      fecha: new Date() 
     });
 
     const compraGuardada = await nuevaCompra.save();
@@ -70,7 +70,7 @@ router.post('/compras', [
     doc.fontSize(20).text('---------------------------------------------------------------------', { align: 'center' });
     doc.moveDown();
     doc.fontSize(18).text(`Proveedor: ${compraPopulada.proveedor.nombreProveedor}`);
-    doc.text(`Fecha: ${fecha}`);
+    doc.text(`Fecha: ${new Date(compraPopulada.fecha).toLocaleString()}`); // Mostrar la fecha correctamente formateada
     doc.moveDown();
 
     // Tabla de productos

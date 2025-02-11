@@ -5,6 +5,7 @@ import Empleados from './empleados';
 import List from './List';
 import Ventas from './ventas'
 import Proveedores from './proveedores'
+import Reportes from './reportes'
 import './App.css';
 import axios from 'axios';
 import Header from "./components/Header";
@@ -311,7 +312,7 @@ function MainPage() {
           <FontAwesomeIcon icon={faUserTie} className="ml-4 text-xl"/>
         </button>
         <button className="border-2 border-black rounded-full px-16 py-1 text-black hover:bg-gray-200 transition duration-300 text-lg font-bold"
-        onClick={() => navigate('/')}
+        onClick={() => navigate('/reportes')}
         >
           Reportes
           <FontAwesomeIcon icon={faMoneyBillWave} className="ml-4 text-xl" />
@@ -457,6 +458,7 @@ function App() {
       <Route path="/ventas" element={<Ventas/>} />
       <Route path="/proveedores" element={<Proveedores/>} />
       <Route path="/empleados" element={<Empleados/>} />
+      <Route path="/reportes" element={<Reportes/>} />
     </Routes>
   );
 }

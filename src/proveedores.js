@@ -6,7 +6,7 @@ import Header from "./components/Header";
 import Footer from "./components/Footer";
 import ProveedorModal from './components/ProveedorModal';
 import CompraModal from './components/CompraModal';
-import { faHome, faPeopleCarryBox, faMagnifyingGlass, faPen, faTrash, faCartPlus} from '@fortawesome/free-solid-svg-icons';
+import { faHome, faPeopleCarryBox, faMagnifyingGlass, faPen, faTrash, faBreadSlice} from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 
 function HomePage() {
@@ -138,7 +138,7 @@ function HomePage() {
         onClick={openCompraModal}
         className='bg-white font-semibold text-3xl px-8 py-5 flex items-center transition-all duration-300 hover:scale-110'
       >
-        <FontAwesomeIcon icon={faCartPlus} className="mr-2 text-4xl font-bold" />
+        <FontAwesomeIcon icon={faBreadSlice} className="mr-2 text-4xl font-bold" />
         Agregar producto
       </button>
     </div>
