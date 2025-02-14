@@ -10,42 +10,16 @@ const FilterModal = ({ isOpen, onRequestClose, applyFilters, clearFilters }) => 
   const [today, setToday] = useState(false);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [hour, setHour] = useState('');
-  const [selectedProducts, setSelectedProducts] = useState([]);
-  const [productInput, setProductInput] = useState('');
-  const [products, setProducts] = useState([]);
-
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const response = await axios.get('http://localhost:5000/api/products');
-        setProducts(response.data);
-      } catch (error) {
-        console.error('Error al obtener los productos', error);
-      }
-    };
-
-    fetchProducts();
-  }, []);
-
-  const handleAddProduct = () => {
-    if (productInput && !selectedProducts.includes(productInput)) {
-      setSelectedProducts([...selectedProducts, productInput]);
-      setProductInput('');
-    }
-  };
-
-  const handleRemoveProduct = (product) => {
-    setSelectedProducts(selectedProducts.filter(p => p !== product));
-  };
+  const [startHour, setStartHour] = useState('');
+  const [endHour, setEndHour] = useState('');
 
   const handleApplyFilters = () => {
     applyFilters({
-      startDate,
-      endDate,
+      startDate: startDate || '',  // Asegura que siempre tenga un valor
+      endDate: endDate || '',
       filterToday: today,
-      hour,
-      selectedProducts
+      startTime: startHour ? `${startHour}:00` : '',
+      endTime: endHour ? `${endHour}:59` : ''
     });
     onRequestClose();
   };
@@ -54,8 +28,8 @@ const FilterModal = ({ isOpen, onRequestClose, applyFilters, clearFilters }) => 
     setStartDate('');
     setEndDate('');
     setToday(false);
-    setHour('');
-    setSelectedProducts([]);
+    setStartHour('');
+    setEndHour('');
     if (typeof clearFilters === 'function') {
       clearFilters();
     }
@@ -70,20 +44,20 @@ const FilterModal = ({ isOpen, onRequestClose, applyFilters, clearFilters }) => 
       overlayClassName="overlay fixed inset-0 bg-gray-600 bg-opacity-50"
     >
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-lg">
-        <h2 className="text-2xl font-bold mb-4">Filtrar por</h2>
-        <div className="space-y-4">
-          {/* Fecha desde */}
-          <div className="flex items-center gap-2">
+        <h2 className="text-2xl font-semibold mb-6 text-gray-700">Filtrar por</h2>
+        <div className="space-y-6">
+          <div className="flex items-center gap-3">
+            <span className="font-semibold text-gray-600">Fecha desde</span>
             <input
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
               disabled={today}
             />
           </div>
           {/* Checkbox Hoy */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 text-gray-600">
             <input
               type="checkbox"
               checked={today}
@@ -93,59 +67,69 @@ const FilterModal = ({ isOpen, onRequestClose, applyFilters, clearFilters }) => 
             <span>Hoy</span>
           </div>
           {/* Hasta el */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            <span className="font-semibold text-gray-600">Hasta el</span>
             <input
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
               disabled={today}
             />
           </div>
           {/* Hora */}
-          <div className="flex items-center gap-2">
-            <select
-              value={hour}
-              onChange={(e) => setHour(e.target.value)}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-            >
-              <option value="">Seleccione una hora</option>
-              {[...Array(24).keys()].map(h => (
-                <option key={h} value={h}>{`${h}:00`}</option>
-              ))}
-            </select>
-            <span><FontAwesomeIcon icon={faClock} className="mr-2 text-xl font-bold" /></span>
+          <div className="space-y-4">
+            <span className="font-semibold text-gray-600 text-xl">Hora</span>
+            <div className="flex items-center gap-4">
+              <span className="font-semibold text-gray-600">Desde:</span>
+              <select
+                value={startHour}
+                onChange={(e) => setStartHour(e.target.value)}
+                className="px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              >
+                <option value="">Selecciona</option>
+                {[...Array(24).keys()].map(h => (
+                  <option key={h} value={h}>{`${h}:00`}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <span className="font-semibold text-gray-600">Hasta:</span>
+              <select
+                value={endHour}
+                onChange={(e) => setEndHour(e.target.value)}
+                className="px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              >
+                <option value="">Selecciona</option>
+                {[...Array(24).keys()].map(h => (
+                  <option key={h} value={h}>{`${h}:59`}</option>
+                ))}
+              </select>
+            </div>
           </div>
-          {/* Productos */}
-          <div className="flex items-center gap-2">
-            <select
-              value={productInput}
-              onChange={(e) => setProductInput(e.target.value)}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-            >
-              <option value="">Seleccione un producto</option>
-              {products.map((product) => (
-                <option key={product._id} value={product.nombre}>
-                  {product.nombre}
-                </option>
-              ))}
-            </select>
-            <span><FontAwesomeIcon icon={faCheese} className="mr-2 text-xl font-bold" /></span>
-            <button onClick={handleAddProduct} className="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md">Agregar</button>
-          </div>
-          <div className="selected-products mt-2">
-            {selectedProducts.map((product, index) => (
-              <div key={index} className="flex items-center justify-between bg-gray-100 p-2 rounded-md mb-2">
-                <span>{product}</span>
-                <button onClick={() => handleRemoveProduct(product)} className="text-red-500 hover:text-red-700">x</button>
-              </div>
-            ))}
-          </div>
+
           {/* Botones */}
-          <div className="flex justify-between mt-4">
-            <button onClick={handleApplyFilters} className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md">Guardar cambios</button>
-            <button onClick={handleClearFilters} className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-md">Eliminar Filtros</button>
-            <button onClick={onRequestClose} className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md">Cancelar</button>
+          <div className="flex justify-between mt-6 space-x-4">
+            <button 
+              onClick={handleApplyFilters} 
+              className="bg-green-500 hover:bg-green-600 text-white font-semibold px-6 py-3 rounded-md transition-all duration-300 ease-in-out"
+            >
+              <FontAwesomeIcon icon={faClock} className="mr-2" />
+              Guardar cambios
+            </button>
+            <button 
+              onClick={handleClearFilters} 
+              className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-6 py-3 rounded-md transition-all duration-300 ease-in-out"
+            >
+              Eliminar filtros
+            </button>
+            <button 
+              onClick={onRequestClose} 
+              className="bg-red-500 hover:bg-red-600 text-white font-semibold px-6 py-3 rounded-md transition-all duration-300 ease-in-out"
+            >
+              Cancelar
+            </button>
           </div>
         </div>
       </div>

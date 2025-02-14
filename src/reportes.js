@@ -4,7 +4,7 @@ import './App.css';
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faHome, faDownload, faMagnifyingGlass, faArrowTrendUp, faFilter } from '@fortawesome/free-solid-svg-icons';
+import { faHome, faDownload, faArrowTrendUp, faFilter } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import FilterModal from './components/FilterModal';
 
@@ -17,6 +17,8 @@ function HomePage() {
   const [proveedores, setProveedores] = useState({});
   const [showVentas, setShowVentas] = useState(true);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [filteredVentas, setFilteredVentas] = useState([]); // Definir estado para ventas filtradas
+  const [filteredCompras, setFilteredCompras] = useState([]); // Definir estado para compras filtradas
   const [filters, setFilters] = useState({
     startDate: '',
     endDate: '',
@@ -58,6 +60,7 @@ function HomePage() {
         const response = await axios.get('http://localhost:5000/api/ventas');
         const sortedVentas = response.data.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
         setVentas(sortedVentas);
+        setFilteredVentas(sortedVentas); // Inicialmente mostrar todas las ventas
       } catch (error) {
         console.error('Error al obtener las ventas', error);
       }
@@ -68,7 +71,7 @@ function HomePage() {
         const response = await axios.get('http://localhost:5000/api/compras');
         const sortedCompras = response.data.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
         setCompras(sortedCompras);
-        console.log('Compras:', sortedCompras); // Agregar console.log para verificar los datos de las compras
+        setFilteredCompras(sortedCompras); // Inicialmente mostrar todas las compras
       } catch (error) {
         console.error('Error al obtener las compras', error);
       }
@@ -81,37 +84,74 @@ function HomePage() {
   }, []);
 
   const applyFilters = (filters) => {
+    // Convertir fechas del filtro a objetos Date
+    const safeFilters = filters || {}; // Asegurar que no sea undefined
+    let startDate = safeFilters.startDate ? new Date(safeFilters.startDate) : null;
+    let adjustedEndDate = safeFilters.endDate ? new Date(safeFilters.endDate) : null;
+  
+    // Si el filtro "hoy" está activado, borrar los rangos de fechas
+    if (filters.filterToday) {
+      startDate = null;
+      adjustedEndDate = null;
+    }
+  
     setFilters(filters);
+  
+    // Asegurar que las fechas sean válidas y normalizarlas
+    if (startDate && !isNaN(startDate)) {
+      startDate.setHours(0, 0, 0, 0);
+    }
+    if (adjustedEndDate && !isNaN(adjustedEndDate)) {
+      adjustedEndDate.setHours(23, 59, 59, 999);
+    }
+  
+    // Función para filtrar datos (ventas o compras)
+    const filtrarDatos = (datos) => {
+      return datos.filter(item => {
+        const itemFecha = new Date(item.fecha);
+  
+        // Normalizar la fecha del item a formato "YYYY-MM-DD"
+        const itemFechaStr = itemFecha.toISOString().split('T')[0];
+  
+        // Normalizar la fecha de inicio y fin
+        const startDateStr = startDate ? startDate.toISOString().split('T')[0] : null;
+        const endDateStr = adjustedEndDate ? adjustedEndDate.toISOString().split('T')[0] : null;
+  
+        // Filtrar por fecha
+        const matchesDate = (!startDateStr || itemFechaStr >= startDateStr) &&
+                            (!endDateStr || itemFechaStr <= endDateStr);
+  
+        // Filtrar solo hoy
+        const todayStr = new Date().toISOString().split('T')[0];
+        const matchesToday = !filters.filterToday || itemFechaStr === todayStr;
+  
+        // Filtrar por hora (selecciona ventas dentro del rango de horas)
+        const itemHora = itemFecha.getHours();
+        const itemMinuto = itemFecha.getMinutes();
+        const [startHour, startMinute] = filters.startTime ? filters.startTime.split(':').map(Number) : [null, null];
+        const [endHour, endMinute] = filters.endTime ? filters.endTime.split(':').map(Number) : [null, null];
+  
+        // Ajustar horas de fin si no están definidas
+        const adjustedEndHour = endHour !== null ? endHour : (startHour !== null ? startHour + 1 : null);
+        const adjustedEndMinute = endMinute !== null ? endMinute : (startMinute !== null ? startMinute : null);
+  
+        const matchesTime = (!startHour || itemHora > startHour || (itemHora === startHour && itemMinuto >= startMinute)) &&
+                            (!adjustedEndHour || itemHora < adjustedEndHour || (itemHora === adjustedEndHour && itemMinuto <= adjustedEndMinute));
+  
+  
+        return matchesDate && matchesToday && matchesTime;
+      });
+    };
+  
+    // Aplicar filtros a ventas y compras
+    const filteredVentas = filtrarDatos(ventas);
+    const filteredCompras = filtrarDatos(compras);
+  
+    setFilteredVentas(filteredVentas);
+    setFilteredCompras(filteredCompras);
   };
-
-  const filteredVentas = ventas.filter(venta => {
-    const nombreString = venta.productos.map(p => productos[p.producto]).join(' ').toLowerCase();
-    const searchLower = searchTerm.toLowerCase();
-    const matchesSearch = nombreString.includes(searchLower);
-
-    const matchesDate = !filters.startDate || !filters.endDate || (new Date(venta.fecha) >= new Date(filters.startDate) && new Date(venta.fecha) <= new Date(filters.endDate));
-    const matchesToday = !filters.filterToday || (new Date(venta.fecha).toDateString() === new Date().toDateString());
-    const matchesTime = (!filters.startTime || new Date(venta.fecha).getHours() >= new Date(`1970-01-01T${filters.startTime}:00`).getHours()) &&
-                        (!filters.endTime || new Date(venta.fecha).getHours() <= new Date(`1970-01-01T${filters.endTime}:00`).getHours());
-    const matchesProducts = filters.selectedProducts.length === 0 || filters.selectedProducts.some(product => venta.productos.some(p => productos[p.producto] === product));
-
-    return matchesSearch && matchesDate && matchesToday && matchesTime && matchesProducts;
-  });
-
-  const filteredCompras = compras.filter(compra => {
-    const nombreString = compra.productos.map(p => productos[p.producto._id]).join(' ').toLowerCase();
-    const searchLower = searchTerm.toLowerCase();
-    const matchesSearch = nombreString.includes(searchLower);
-
-    const matchesDate = !filters.startDate || !filters.endDate || (new Date(compra.fecha) >= new Date(filters.startDate) && new Date(compra.fecha) <= new Date(filters.endDate));
-    const matchesToday = !filters.filterToday || (new Date(compra.fecha).toDateString() === new Date().toDateString());
-    const matchesTime = (!filters.startTime || new Date(compra.fecha).getHours() >= new Date(`1970-01-01T${filters.startTime}:00`).getHours()) &&
-                        (!filters.endTime || new Date(compra.fecha).getHours() <= new Date(`1970-01-01T${filters.endTime}:00`).getHours());
-    const matchesProducts = filters.selectedProducts.length === 0 || filters.selectedProducts.some(product => compra.productos.some(p => productos[p.producto._id] === product));
-
-    return matchesSearch && matchesDate && matchesToday && matchesTime && matchesProducts;
-  });
-
+  
+  // ...existing code...
   const formatDate = (dateString) => {
     const options = { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true };
     return new Date(dateString).toLocaleDateString('es-ES', options);
@@ -139,7 +179,7 @@ function HomePage() {
             Compras
           </button>
         </div>
-
+  
         <div className="flex space-x-12">
           <button className="flex items-center text-2xl font-semibold hover:scale-105 transition">
             <FontAwesomeIcon icon={faDownload} className="mr-3 text-3xl" />
@@ -155,7 +195,7 @@ function HomePage() {
           </button>
         </div>
       </div>
-
+  
       <div className='bg-white h-screen overflow-auto'>
         {showVentas ? (
           <table className='min-w-full text-m'>
@@ -227,7 +267,7 @@ function HomePage() {
           </table>
         )}
       </div>
-
+  
       <div className="bg-greyColor p-4 flex justify-end space-x-20">
         <button
           onClick={() => navigate('/')}
@@ -238,10 +278,23 @@ function HomePage() {
         </button>
       </div>
       <Footer />
+  
       <FilterModal
         isOpen={isFilterModalOpen}
         onRequestClose={() => setIsFilterModalOpen(false)}
         applyFilters={applyFilters}
+        clearFilters={() => {
+          setFilters({
+            startDate: '',
+            endDate: '',
+            filterToday: false,
+            startTime: '',
+            endTime: '',
+          });
+          setFilteredVentas(ventas);
+          setFilteredCompras(compras);
+        }}
+        
       />
     </div>
   );
