@@ -5,6 +5,7 @@ const productsRoutes = require('./routes/products');
 const proveedoresRoutes = require('./routes/proveedores');
 const empleadosRoutes = require('./routes/empleados');
 const comprasRoutes = require('./routes/compras');
+const reportRoutes = require('./routes/report');
 
 const app = express();
 const port = 5000;
@@ -26,6 +27,7 @@ app.use('/api', productsRoutes);
 app.use('/api', proveedoresRoutes);
 app.use('/api', empleadosRoutes);
 app.use('/api', comprasRoutes);
+app.use('/api', reportRoutes);
 
 app.listen(port, () => {
   console.log(`Servidor corriendo en http://localhost:${port}`);

@@ -7,16 +7,17 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHome, faDownload, faArrowTrendUp, faFilter } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import FilterModal from './components/FilterModal';
+import ReportsModal from './components/ReportsModal'; // Importar el nuevo modal
 
 function HomePage() {
   const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = useState('');
   const [ventas, setVentas] = useState([]);
   const [compras, setCompras] = useState([]);
   const [productos, setProductos] = useState({});
   const [proveedores, setProveedores] = useState({});
   const [showVentas, setShowVentas] = useState(true);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [isReportsModalOpen, setIsReportsModalOpen] = useState(false); // Estado para el nuevo modal
   const [filteredVentas, setFilteredVentas] = useState([]); // Definir estado para ventas filtradas
   const [filteredCompras, setFilteredCompras] = useState([]); // Definir estado para compras filtradas
   const [filters, setFilters] = useState({
@@ -138,8 +139,12 @@ function HomePage() {
         const matchesTime = (!startHour || itemHora > startHour || (itemHora === startHour && itemMinuto >= startMinute)) &&
                             (!adjustedEndHour || itemHora < adjustedEndHour || (itemHora === adjustedEndHour && itemMinuto <= adjustedEndMinute));
   
+        // Filtrar por productos seleccionados
+        const matchesProducts = filters.selectedProducts.length === 0 || 
+                                filters.selectedProducts.some(productId => 
+                                  item.productos.some(p => p.producto.toString() === productId));
   
-        return matchesDate && matchesToday && matchesTime;
+        return matchesDate && matchesToday && matchesTime && matchesProducts;
       });
     };
   
@@ -151,7 +156,6 @@ function HomePage() {
     setFilteredCompras(filteredCompras);
   };
   
-  // ...existing code...
   const formatDate = (dateString) => {
     const options = { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true };
     return new Date(dateString).toLocaleDateString('es-ES', options);
@@ -179,9 +183,9 @@ function HomePage() {
             Compras
           </button>
         </div>
-  
+
         <div className="flex space-x-12">
-          <button className="flex items-center text-2xl font-semibold hover:scale-105 transition">
+          <button className="flex items-center text-2xl font-semibold hover:scale-105 transition" onClick={() => setIsReportsModalOpen(true)}>
             <FontAwesomeIcon icon={faDownload} className="mr-3 text-3xl" />
             Descargar reportes
           </button>
@@ -195,7 +199,7 @@ function HomePage() {
           </button>
         </div>
       </div>
-  
+
       <div className='bg-white h-screen overflow-auto'>
         {showVentas ? (
           <table className='min-w-full text-m'>
@@ -294,7 +298,11 @@ function HomePage() {
           setFilteredVentas(ventas);
           setFilteredCompras(compras);
         }}
-        
+      />
+
+      <ReportsModal
+        isOpen={isReportsModalOpen}
+        onRequestClose={() => setIsReportsModalOpen(false)}
       />
     </div>
   );
