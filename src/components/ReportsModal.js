@@ -120,7 +120,7 @@ const ReportsModal = ({ isOpen, onRequestClose }) => {
                 checked={formatXlsx}
                 onChange={(e) => {
                   setFormatXlsx(e.target.checked);
-                  if (!e.target.checked) setFormatPdf(true);
+                  if (e.target.checked) setFormatPdf(false); // Asegura que solo un formato esté seleccionado
                 }}
                 className="form-checkbox"
               />
@@ -132,11 +132,11 @@ const ReportsModal = ({ isOpen, onRequestClose }) => {
                 checked={formatPdf}
                 onChange={(e) => {
                   setFormatPdf(e.target.checked);
-                  if (!e.target.checked) setFormatXlsx(true);
+                  if (e.target.checked) setFormatXlsx(false); // Asegura que solo un formato esté seleccionado
                 }}
                 className="form-checkbox"
               />
-              <span className="ml-2">.pdf  <FontAwesomeIcon icon={faFilePdf} className="mr-3" />  </span>
+              <span className="ml-2">.pdf  <FontAwesomeIcon icon={faFilePdf} className="mr-3" /></span>
             </label>
           </div>
           <div className="flex justify-between mt-6 space-x-4">

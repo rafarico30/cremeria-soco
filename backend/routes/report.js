@@ -3,11 +3,33 @@ const router = express.Router();
 const mongoose = require('mongoose');
 const Venta = require('../models/Venta');
 const Compra = require('../models/Compra');
-const ExcelJS = require('exceljs');
 const PDFDocument = require('pdfkit');
 const moment = require('moment');
 const fs = require('fs');
+const { ChartJSNodeCanvas } = require('chartjs-node-canvas');
 require('moment/locale/es');
+
+const width = 800; // width of the chart
+const height = 600; // height of the chart
+const chartJSNodeCanvas = new ChartJSNodeCanvas({ width, height, backgroundColour: 'white' });
+
+const groupByDateTime = (items, rangeType) => {
+  return items.reduce((acc, item) => {
+    let date;
+    if (rangeType === 'days') {
+      date = moment(item.fecha).format('LL'); // Agrupar por día
+    } else if (rangeType === 'months') {
+      date = moment(item.fecha).format('MMMM YYYY'); // Agrupar por mes
+    } else if (rangeType === 'years') {
+      date = moment(item.fecha).format('YYYY'); // Agrupar por año
+    }
+    if (!acc[date]) {
+      acc[date] = [];
+    }
+    acc[date].push(item);
+    return acc;
+  }, {});
+};
 
 router.post('/generateReport', async (req, res) => {
   const { startDate, endDate, includeVentas, includeCompras, formatXlsx, formatPdf } = req.body;
@@ -259,6 +281,211 @@ router.post('/generateReport', async (req, res) => {
       doc.end();
 
 
+    }
+  } catch (error) {
+    console.error('Error generating report:', error);
+    res.status(500).send('Error generating report');
+  }
+});
+
+router.post('/generateGraphics', async (req, res) => {
+  const { startDate, endDate, includeVentas, includeProducts, formatJpg, formatPdf, rangeType } = req.body;
+
+  // Validar que las fechas y los checkboxes estén presentes
+  if (!startDate || !endDate || (!includeVentas && !includeProducts)) {
+    return res.status(400).json({ error: 'Por favor, seleccione un rango de fechas y al menos una opción de reporte (ventas o productos).' });
+  }
+
+  try {
+    const startDateStr = moment(startDate).format('YYYY-MM-DD');
+    let endDateStr = moment(endDate).format('YYYY-MM-DD');
+
+    // Ajustar la fecha de finalización para incluir el último día del año si el rango es por años
+    if (rangeType === 'years') {
+      endDateStr = moment(endDate).endOf('year').format('YYYY-MM-DD');
+    }
+
+    const start = new Date(`${startDateStr}T00:00:00.000Z`);
+    const end = new Date(`${endDateStr}T23:59:59.999Z`);
+
+    end.setHours(23, 59, 59, 999);
+
+    let ventas = [];
+    let productosVendidos = {};
+    let ventasPorFecha = {};
+
+    if (includeVentas) {
+      ventas = await Venta.find({ fecha: { $gte: start, $lte: end } }).populate('productos.producto');
+      ventasPorFecha = ventas.reduce((acc, venta) => {
+        const fecha = moment(venta.fecha).format('YYYY-MM-DD');
+        if (!acc[fecha]) {
+          acc[fecha] = 0;
+        }
+        acc[fecha] += venta.total;
+        return acc;
+      }, {});
+    }
+
+    if (includeProducts) {
+      ventas = await Venta.find({ fecha: { $gte: start, $lte: end } }).populate('productos.producto');
+      productosVendidos = ventas.reduce((acc, venta) => {
+        venta.productos.forEach(({ producto, cantidad }) => {
+          if (!acc[producto.nombre]) {
+            acc[producto.nombre] = 0;
+          }
+          acc[producto.nombre] += cantidad;
+        });
+        return acc;
+      }, {});
+    }
+
+    const generateChart = async (data, title) => {
+      const colors = [
+        'rgba(75, 192, 192, 1)',
+        'rgba(54, 162, 235, 1)',
+        'rgba(255, 206, 86, 1)',
+        'rgba(75, 192, 192, 1)',
+        'rgba(153, 102, 255, 1)',
+        'rgba(255, 159, 64, 1)'
+      ];
+    
+      const borderColors = [
+        'rgba(75, 192, 192, 1)',
+        'rgba(54, 162, 235, 1)',
+        'rgba(255, 206, 86, 1)',
+        'rgba(75, 192, 192, 1)',
+        'rgba(153, 102, 255, 1)',
+        'rgba(255, 159, 64, 1)'
+      ];
+    
+      const configuration = {
+        type: 'bar',
+        data: {
+          labels: Object.keys(data),
+          datasets: [{
+            label: title,
+            data: Object.values(data),
+            backgroundColor: colors,
+            borderColor: borderColors,
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            title: {
+              display: true,
+              text: title,
+              font: {
+                size: 24,
+                weight: 'bold'
+              }
+            },
+            legend: {
+              display: true,
+              position: 'top',
+              labels: {
+                font: {
+                  size: 14,
+                  weight: 'bold'
+                }
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return `${context.dataset.label}: ${context.raw}`;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              title: {
+                display: true,
+                text: 'Producto',
+                font: {
+                  size: 16,
+                  weight: 'bold'
+                }
+              },
+              ticks: {
+                font: {
+                  size: 12,
+                  weight: 'bold'
+                }
+              }
+            },
+            y: {
+              title: {
+                display: true,
+                text: 'Cantidad Vendida',
+                font: {
+                  size: 16,
+                  weight: 'bold'
+                }
+              },
+              ticks: {
+                beginAtZero: true,
+                font: {
+                  size: 12,
+                  weight: 'bold'
+                }
+              }
+            }
+          }
+        }
+      };
+      return await chartJSNodeCanvas.renderToBuffer(configuration, 'image/jpeg');
+    };
+
+    if (formatPdf) {
+      const doc = new PDFDocument({ margin: 50 });
+      
+      const formattedStartDate = moment(start).add(1, 'days').format('LL'); 
+      const formattedEndDate = moment(end).format('LL');
+
+      doc.fontSize(18).text('Cremeria Soco', { align: 'center' });
+      doc.moveDown();
+      doc.fontSize(14).text(`Reporte generado de ${formattedStartDate} - ${formattedEndDate}`, { align: 'center' });
+      doc.moveDown(2);
+
+      let buffers = [];
+      doc.on('data', buffers.push.bind(buffers));
+      doc.on('end', () => {
+        let pdfData = Buffer.concat(buffers);
+        res.setHeader('Content-Disposition', `attachment; filename=reporte.pdf`);
+        res.setHeader('Content-Type', 'application/pdf');
+        res.send(pdfData);
+      });
+
+      if (includeVentas) {
+        const ventasChart = await generateChart(ventasPorFecha, 'Ventas');
+        doc.image(ventasChart, { fit: [500, 300], align: 'center' });
+      }
+
+      if (includeProducts) {
+        const productosChart = await generateChart(productosVendidos, 'Productos Vendidos');
+        doc.image(productosChart, { fit: [500, 300], align: 'center' });
+      }
+
+      doc.end();
+    }
+
+    if (formatJpg) {
+      if (includeVentas) {
+        const ventasChart = await generateChart(ventasPorFecha, 'Ventas');
+        res.setHeader('Content-Disposition', 'attachment; filename="ventas.jpg"');
+        res.setHeader('Content-Type', 'image/jpeg');
+        res.send(ventasChart);
+      }
+
+      if (includeProducts) {
+        const productosChart = await generateChart(productosVendidos, 'Productos Vendidos');
+        res.setHeader('Content-Disposition', 'attachment; filename="productos_vendidos.jpg"');
+        res.setHeader('Content-Type', 'image/jpeg');
+        res.send(productosChart);
+      }
     }
   } catch (error) {
     console.error('Error generating report:', error);

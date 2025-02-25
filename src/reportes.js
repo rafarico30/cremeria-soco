@@ -7,7 +7,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHome, faDownload, faArrowTrendUp, faFilter } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import FilterModal from './components/FilterModal';
-import ReportsModal from './components/ReportsModal'; // Importar el nuevo modal
+import ReportsModal from './components/ReportsModal';
+import GraphicsModal from './components/GraphicsModal'; // Importar el nuevo modal
 
 function HomePage() {
   const navigate = useNavigate();
@@ -17,7 +18,8 @@ function HomePage() {
   const [proveedores, setProveedores] = useState({});
   const [showVentas, setShowVentas] = useState(true);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
-  const [isReportsModalOpen, setIsReportsModalOpen] = useState(false); // Estado para el nuevo modal
+  const [isReportsModalOpen, setIsReportsModalOpen] = useState(false);
+  const [isGraphicsModalOpen, setIsGraphicsModalOpen] = useState(false); // Estado para el nuevo modal
   const [filteredVentas, setFilteredVentas] = useState([]); // Definir estado para ventas filtradas
   const [filteredCompras, setFilteredCompras] = useState([]); // Definir estado para compras filtradas
   const [filters, setFilters] = useState({
@@ -189,7 +191,7 @@ function HomePage() {
             <FontAwesomeIcon icon={faDownload} className="mr-3 text-3xl" />
             Descargar reportes
           </button>
-          <button className="flex items-center text-2xl font-semibold hover:scale-105 transition">
+          <button className="flex items-center text-2xl font-semibold hover:scale-105 transition" onClick={() => setIsGraphicsModalOpen(true)}>
             <FontAwesomeIcon icon={faArrowTrendUp} className="mr-3 text-3xl" />
             Revisar gráficas
           </button>
@@ -304,6 +306,11 @@ function HomePage() {
         isOpen={isReportsModalOpen}
         onRequestClose={() => setIsReportsModalOpen(false)}
       />
+
+      <GraphicsModal
+        isOpen={isGraphicsModalOpen}
+        onRequestClose={() => setIsGraphicsModalOpen(false)}
+      />    
     </div>
   );
 }
