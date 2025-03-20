@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
 import Inventory from './inventory'; 
 import Empleados from './empleados';
+import Clientes from './clientes';
 import List from './List';
-import Ventas from './ventas'
 import Proveedores from './proveedores'
 import Reportes from './reportes'
 import './App.css';
@@ -11,7 +11,7 @@ import axios from 'axios';
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBoxesStacked, faCalculator, faXmark, faSearch, faCheese, faCheck, faPeopleCarryBox, faUserTie, faMoneyBillWave} from '@fortawesome/free-solid-svg-icons';
+import { faBoxesStacked, faHandshake, faXmark, faSearch, faCheese, faCheck, faPeopleCarryBox, faUserTie, faMoneyBillWave} from '@fortawesome/free-solid-svg-icons';
 
 function MainPage() {
   
@@ -293,13 +293,6 @@ function MainPage() {
         </button>
 
         <button className="border-2 border-black rounded-full px-16 py-1 text-black hover:bg-gray-200 transition duration-300 text-lg font-bold"
-        onClick={() => navigate('/ventas')}
-        >
-          Ventas
-          <FontAwesomeIcon icon={faCalculator} className="ml-4 text-xl" />
-        </button>
-
-        <button className="border-2 border-black rounded-full px-16 py-1 text-black hover:bg-gray-200 transition duration-300 text-lg font-bold"
         onClick={() => navigate('/proveedores')}
         >
           Proveedores
@@ -317,6 +310,15 @@ function MainPage() {
           Reportes
           <FontAwesomeIcon icon={faMoneyBillWave} className="ml-4 text-xl" />
         </button>
+
+        
+        <button className="border-2 border-black rounded-full px-16 py-1 text-black hover:bg-gray-200 transition duration-300 text-lg font-bold"
+        onClick={() => navigate('/clientes')}
+        >
+          Clientes
+          <FontAwesomeIcon icon={faHandshake} className="ml-4 text-xl"/>
+        </button>
+        
       </div>
 
       
@@ -455,8 +457,8 @@ function App() {
       <Route path="/" element={<MainPage />} />
       <Route path="/inventory" element={<Inventory />} />
       <Route path="/list" element={<List/>} />
-      <Route path="/ventas" element={<Ventas/>} />
       <Route path="/proveedores" element={<Proveedores/>} />
+      <Route path="/clientes" element={<Clientes/>} />
       <Route path="/empleados" element={<Empleados/>} />
       <Route path="/reportes" element={<Reportes/>} />
     </Routes>
