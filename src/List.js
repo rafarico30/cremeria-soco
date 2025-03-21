@@ -39,6 +39,8 @@ function HomePage() {
     fetchProducts();
   }, [location.search]);
 
+  
+
   const openModal = () => {
     setIsModalOpen(true);
     setEditProduct(null); // Reset edit product on opening the modal
@@ -54,65 +56,68 @@ function HomePage() {
     setEditProduct(null);
   };
 
+  
+
+  const handleDelete = async (id) => {
+    if (window.confirm('¿Estás seguro de que deseas eliminar este producto?')) {
+      try {
+        await axios.delete(`http://localhost:5000/api/products/${id}`);
+        setProducts(products.filter((product) => product._id !== id));
+        setConfirmationMessage('Producto eliminado correctamente');
+        setTimeout(() => {
+          setConfirmationMessage('');
+        }, 3000);
+      } catch (error) {
+        console.error('Error al eliminar el producto:', error);
+        setErrorMessage('Error al eliminar el producto');
+        setTimeout(() => {
+          setErrorMessage('');
+        }, 3000);
+      }
+    }
+  };
+
   const handleSave = async (event) => {
     event.preventDefault();
     const formData = new FormData(event.target);
   
+    const esGranel = formData.get('esGranel') === 'on'; // Verificar si es a granel
     const productData = {
+      claveProducto: esGranel ? '' : formData.get('claveProducto'), // Dejar vacío si es a granel
       nombre: formData.get('name'),
       descripcion: formData.get('description'),
       precio: formData.get('price'),
       stock: formData.get('stock'),
       categoria: formData.get('category'),
       ventaPorPieza: formData.get('ventaPorPieza') === 'pieza',
-      precioProveedor: formData.get('precioProveedor'), // Esto dependerá de tu lógica
+      precioProveedor: formData.get('precioProveedor'),
     };
-    
-
-    const productExists = products.some(existingProduct => 
-      existingProduct.nombre.toLowerCase() === productData.nombre.toLowerCase() && 
-      existingProduct._id !== (editProduct ? editProduct._id : null)
-    );
-
-    if (productExists) {
-      setErrorMessage('El producto ya existe.'); // Mostrar error si el producto ya está en la lista
-      setTimeout(() => {
-        setErrorMessage('');
-      }, 3000);
-      return; // Salir de la función para no continuar con la creación del producto
-    }
-
-
-    
-    if (editProduct) {
-      try {
+  
+    try {
+      if (editProduct) {
+        // Editar producto existente
         await axios.put(`http://localhost:5000/api/products/${editProduct._id}`, productData);
         setProducts(products.map(product =>
           product._id === editProduct._id ? { ...product, ...productData } : product
         ));
         setConfirmationMessage('Producto actualizado correctamente');
-      } catch (error) {
-        console.error('Error al actualizar el producto', error);
-      }
-    } else {
-      // Crear nuevo producto
-      try {
+      } else {
+        // Crear nuevo producto
         const response = await axios.post('http://localhost:5000/api/products', productData);
         setProducts([...products, response.data]);
         setConfirmationMessage('Producto creado correctamente');
-      } catch (error) {
-        console.error('Error al agregar el producto', error);
       }
+    } catch (error) {
+      console.error('Error al guardar el producto:', error);
+      setErrorMessage('Error al guardar el producto');
     }
-
+  
     closeModal();
-
+  
     setTimeout(() => {
       setConfirmationMessage('');
     }, 3000);
   };
-
-  
 
   const filteredProducts = products.filter(product => {
     const idString = String(product.id).toLowerCase();
@@ -125,6 +130,7 @@ function HomePage() {
 
     return matchesSearchTerm && matchesCategory;
   });
+  
 
   return (
     <div className="App flex flex-col h-screen">
@@ -196,7 +202,10 @@ function HomePage() {
                     <button onClick={() => openEditModal(product)} className='transition-all duration-300 hover:scale-110'>
                       <FontAwesomeIcon icon={faPen} className="mr-2 text-2xl font-bold" />
                     </button>
-                    <button className='transition-all duration-300 hover:scale-110'>
+                    <button
+                      onClick={() => handleDelete(product._id)} // Llamar a handleDelete con el _id del producto
+                      className='transition-all duration-300 hover:scale-110'
+                    >
                       <FontAwesomeIcon icon={faTrash} className="ml-3 text-2xl font-bold" />
                     </button>
                   </td>
@@ -223,115 +232,158 @@ function HomePage() {
 
      <Footer/>
 
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded-lg w-1/2">
-            <h2 className="text-2xl font-bold mb-4">{editProduct ? 'Editar Producto' : 'Agregar Producto'}</h2>
-            <form onSubmit={handleSave}>
-              <div className="mb-4">
-                <label className="block text-xl font-semibold mb-2" htmlFor="name">Nombre</label>
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  defaultValue={editProduct ? editProduct.nombre : ''}
-                  className="w-full bg-white rounded-md px-4 py-2 border border-gray-300 text-xl"
-                  required
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-xl font-semibold mb-2" htmlFor="description">Descripción</label>
-                <input
-                  type="text"
-                  id="description"
-                  name="description"
-                  defaultValue={editProduct ? editProduct.descripcion : ''}
-                  className="w-full rounded-md px-4 py-2 border border-gray-300 text-xl"
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-xl font-semibold mb-2" htmlFor="price">Precio</label>
-                <input
-                  type="number"
-                  id="price"
-                  name="price"
-                  step="0.01"
-                  defaultValue={editProduct ? editProduct.precio : ''}
-                  onChange={(e) => setPrecio(Math.max(0, e.target.value))}
-                  className="w-full bg-white rounded-md px-4 py-2 border border-gray-300 text-xl"
-                  required
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-xl font-semibold mb-2" htmlFor="precioProveedor">Precio Proveedor</label>
-                <input
-                  type="number"
-                  id="precioProveedor"
-                  name="precioProveedor"
-                  step="0.01"
-                  defaultValue={editProduct ? editProduct.precioProveedor : ''}
-                  onChange={(e) => setPrecio(Math.max(0, e.target.value))}
-                  className="w-full bg-white rounded-md px-4 py-2 border border-gray-300 text-xl"
-                  required
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-xl font-semibold mb-2" htmlFor="stock">Stock</label>
-                <input
-                  type="number"
-                  id="stock"
-                  name="stock"
-                  defaultValue={editProduct ? editProduct.stock : ''}
-                  className="w-full bg-white rounded-md px-4 py-2 border border-gray-300 text-xl"
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-xl font-semibold mb-2" htmlFor="ventaPorPieza">Se vende por:</label>
-                <select
-                  id="ventaPorPieza"
-                  name="ventaPorPieza"
-                  defaultValue={editProduct ? editProduct.ventaPorPieza: ''}
-                  className="w-full bg-white rounded-md px-4 py-2 border border-gray-300 text-xl"
-                >
-                  <option value="pieza">Pieza</option>
-                  <option value="kilogramos">Kilogramos</option>
-                </select>
-              </div>
-              
-              <div className="mb-4">
-                    <label className="block text-xl font-semibold mb-2" htmlFor="category">Categoría</label>
-                    <select
-                      id="category"
-                      name="category"
-                      defaultValue={editProduct ? editProduct.categoria : ''}
-                      className="w-full bg-white rounded-md px-4 py-2 border border-gray-300 text-xl"
-                      required // Puedes hacer este campo requerido si es necesario
-                    >
-                      <option value="">Seleccionar categoría</option>
-                      <option value="carnes frias">Carnes frías</option>
-                      <option value="productos bimbo">Productos Bimbo</option>
-                      <option value="quesos">Quesos</option>
-                      <option value="productos lacteos">Productos lácteos</option>
-                      <option value="otro">Otro</option>
-                    </select>
-                  </div>
-
-              <div className="flex justify-end space-x-4">
-                <button type="submit" className="bg-green-500 text-white font-bold px-6 py-4 rounded hover:bg-green-600 text-lg">
-                  Guardar
-                </button>
-                <button
-                  type="button"
-                  onClick={closeModal}
-                  className="bg-redColor text-white font-bold px-6 py-4 rounded hover:bg-red-400 text-lg"
-                >
-                  Cerrar
-                </button>
-              </div>
-            </form>
+     {isModalOpen && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+    <div className="bg-white p-6 rounded-lg w-1/2">
+      <h2 className="text-2xl font-bold mb-4">{editProduct ? 'Editar Producto' : 'Agregar Producto'}</h2>
+      <form onSubmit={handleSave}>
+      {/* Campo para Clave del Producto */}
+      <div className="mb-4">
+          <label className="block text-xl font-semibold mb-2" htmlFor="claveProducto">Clave del Producto:</label>
+          <div className="flex items-center space-x-4">
+            <input
+              type="text"
+              id="claveProducto"
+              name="claveProducto"
+              defaultValue={editProduct ? editProduct.claveProducto : ''}
+              className="flex-1 bg-white rounded-md px-4 py-2 border border-gray-300 text-xl"
+              placeholder="Ingrese la clave o deje vacío"
+              disabled={document.getElementById('esGranel')?.checked} // Deshabilitar si el checkbox está marcado
+            />
+            <label className="inline-flex items-center">
+              <input
+                type="checkbox"
+                id="esGranel"
+                name="esGranel"
+                className="form-checkbox h-5 w-5 text-blue-600"
+                onChange={(e) => {
+                  const input = document.getElementById('claveProducto');
+                  input.disabled = e.target.checked; // Deshabilitar el campo si el checkbox está marcado
+                  if (e.target.checked) input.value = ''; // Limpiar el campo si se selecciona "A granel"
+                }}
+              />
+              <span className="ml-2 text-gray-700">A granel</span>
+            </label>
           </div>
         </div>
-      )}
+
+        {/* Campo para Nombre */}
+        <div className="mb-4">
+          <label className="block text-xl font-semibold mb-2" htmlFor="name">Nombre<span className="text-red-600" title="Este campo es requerido">*</span>:</label>
+          <input
+            type="text"
+            id="name"
+            name="name"
+            defaultValue={editProduct ? editProduct.nombre : ''}
+            className="w-full bg-white rounded-md px-4 py-2 border border-gray-300 text-xl"
+            required
+          />
+        </div>
+
+        {/* Campo para Descripción */}
+        <div className="mb-4">
+          <label className="block text-xl font-semibold mb-2" htmlFor="description">Descripción<span className="text-red-600" title="Este campo es requerido">*</span>:</label>
+          <input
+            type="text"
+            id="description"
+            name="description"
+            defaultValue={editProduct ? editProduct.descripcion : ''}
+            className="w-full rounded-md px-4 py-2 border border-gray-300 text-xl"
+          />
+        </div>
+
+        {/* Campo para Precio */}
+        <div className="mb-4">
+          <label className="block text-xl font-semibold mb-2" htmlFor="price">Precio<span className="text-red-600" title="Este campo es requerido">*</span>:</label>
+          <input
+            type="number"
+            id="price"
+            name="price"
+            step="0.01"
+            defaultValue={editProduct ? editProduct.precio : ''}
+            onChange={(e) => setPrecio(Math.max(0, e.target.value))}
+            className="w-full bg-white rounded-md px-4 py-2 border border-gray-300 text-xl"
+            required
+          />
+        </div>
+
+        {/* Campo para Precio Proveedor */}
+        <div className="mb-4">
+          <label className="block text-xl font-semibold mb-2" htmlFor="precioProveedor">Precio Proveedor<span className="text-red-600" title="Este campo es requerido">*</span>:</label>
+          <input
+            type="number"
+            id="precioProveedor"
+            name="precioProveedor"
+            step="0.01"
+            defaultValue={editProduct ? editProduct.precioProveedor : ''}
+            onChange={(e) => setPrecio(Math.max(0, e.target.value))}
+            className="w-full bg-white rounded-md px-4 py-2 border border-gray-300 text-xl"
+            required
+          />
+        </div>
+
+        {/* Campo para Stock */}
+        <div className="mb-4">
+          <label className="block text-xl font-semibold mb-2" htmlFor="stock">Stock<span className="text-red-600" title="Este campo es requerido">*</span>:</label>
+          <input
+            type="number"
+            id="stock"
+            name="stock"
+            defaultValue={editProduct ? editProduct.stock : ''}
+            className="w-full bg-white rounded-md px-4 py-2 border border-gray-300 text-xl"
+          />
+        </div>
+
+        {/* Campo para Venta por Pieza */}
+        <div className="mb-4">
+          <label className="block text-xl font-semibold mb-2" htmlFor="ventaPorPieza">Se vende por<span className="text-red-600" title="Este campo es requerido">*</span>:</label>
+          <select
+            id="ventaPorPieza"
+            name="ventaPorPieza"
+            defaultValue={editProduct ? editProduct.ventaPorPieza : ''}
+            className="w-full bg-white rounded-md px-4 py-2 border border-gray-300 text-xl"
+          >
+            <option value="pieza">Pieza</option>
+            <option value="kilogramos">Kilogramos</option>
+          </select>
+        </div>
+
+        {/* Campo para Categoría */}
+        <div className="mb-4">
+          <label className="block text-xl font-semibold mb-2" htmlFor="category">Categoría<span className="text-red-600" title="Este campo es requerido">*</span>:</label>
+          <select
+            id="category"
+            name="category"
+            defaultValue={editProduct ? editProduct.categoria : ''}
+            className="w-full bg-white rounded-md px-4 py-2 border border-gray-300 text-xl"
+            required
+          >
+            <option value="">Seleccionar categoría</option>
+            <option value="carnes frias">Carnes frías</option>
+            <option value="productos bimbo">Productos Bimbo</option>
+            <option value="quesos">Quesos</option>
+            <option value="productos lacteos">Productos lácteos</option>
+            <option value="otro">Otro</option>
+          </select>
+        </div>
+
+        {/* Botones de Guardar y Cerrar */}
+        <div className="flex justify-end space-x-4">
+          <button type="submit" className="bg-green-500 text-white font-bold px-6 py-4 rounded hover:bg-green-600 text-lg">
+            Guardar
+          </button>
+          <button
+            type="button"
+            onClick={closeModal}
+            className="bg-redColor text-white font-bold px-6 py-4 rounded hover:bg-red-400 text-lg"
+          >
+            Cerrar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+)}
     </div>
   );
 }

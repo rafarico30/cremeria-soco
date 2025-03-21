@@ -15,31 +15,29 @@ const truncateText = (text, maxLength) => {
   return text;
 };
 
-// Ruta para crear un nuevo producto (POST)
-router.post('/products', [
-  body('claveProducto').isNumeric().withMessage('La clave del producto debe ser un número'),
-  body('nombre').notEmpty().withMessage('El nombre es requerido'),
-  body('precio').isNumeric().withMessage('El precio debe ser un número'),
-  body('stock').isNumeric().withMessage('El stock debe ser un número'),
-  body('categoria').notEmpty().withMessage('La categoría es requerida'),
-  body('ventaPorPieza').isBoolean().withMessage('La venta por pieza debe ser un valor booleano')
-], async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
-
+router.post('/products', async (req, res) => {
   try {
     const { claveProducto, nombre, descripcion, precio, stock, categoria, ventaPorPieza, precioProveedor } = req.body;
+
+    let codigoFinal = claveProducto;
+
+    // Si claveProducto está vacío, generar un número básico único
+    if (!claveProducto) {
+      const ultimoProducto = await Product.findOne({ claveProducto: { $regex: /^[0-9]+$/ } })
+        .sort({ claveProducto: -1 })
+        .exec();
+      codigoFinal = ultimoProducto ? (parseInt(ultimoProducto.claveProducto) + 1).toString() : '1';
+    }
+
     const nuevoProducto = new Product({
-      claveProducto,
+      claveProducto: codigoFinal,
       nombre,
       descripcion,
       precio,
       stock,
       categoria,
       ventaPorPieza,
-      precioProveedor
+      precioProveedor,
     });
 
     const productoGuardado = await nuevoProducto.save();
