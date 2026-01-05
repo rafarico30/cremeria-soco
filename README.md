@@ -1,70 +1,52 @@
-# Getting Started with Create React App
+# 🏪 Cremería Soco - Point of Sale (POS) System
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)
+![NodeJS](https://img.shields.io/badge/node.js-%2343853D.svg?style=for-the-badge&logo=node.js&logoColor=white)
+![Express.js](https://img.shields.io/badge/express.js-%23404d59.svg?style=for-the-badge&logo=express&logoColor=%2361DAFB)
+![MongoDB](https://img.shields.io/badge/MongoDB-%234ea94b.svg?style=for-the-badge&logo=mongodb&logoColor=white)
 
-## Available Scripts
+> A comprehensive, full-stack Point of Sale (POS) & ERP solution tailored for retail businesses. It streamlines inventory, sales, and stakeholder management with a modern, user-friendly interface.
 
-In the project directory, you can run:
+---
 
-### `npm start`
+### 🚀 Key Features
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+#### ⚡ Core POS Operations
+* **Efficient Sales Interface:** Quick product lookup via search bar or visual categories (Cold Cuts, Dairy, etc.) for high-speed checkout.
+* **Smart Transaction Handling:** Real-time subtotal calculation, dynamic change calculation, and receipt generation.
+* **Inventory CRUD:** Complete stock management system to track quantities, pricing (Purchase vs. Sale), and low-stock alerts.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+#### 👥 Management Modules (CRM & ERP)
+* **🛒 Customer Management:** Maintain a directory of loyal customers to speed up checkout and track purchase history.
+* **🚛 Supplier Management:** Organize vendor details (contact info, catalog) to streamline re-stocking processes.
+* **🛡️ Employee Administration:** Manage staff profiles and control system access (Security & Role management).
 
-### `npm test`
+#### 📊 Analytics & Reporting
+* **Visual Dashboard:** Interactive charts showing daily/monthly revenue trends.
+* **Exportable Reports:** Generate detailed PDF/Excel reports for accounting and auditing purposes.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+---
 
-### `npm run build`
+### 📸 System Overview
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+| **Main POS Interface** | **Smart Payment & Change** |
+|:---:|:---:|
+| <img width="1280" height="674" alt="image" src="https://github.com/user-attachments/assets/dc0158b6-9c7f-4671-bdae-7e94c9b14484" /> | <img width="1280" height="677" alt="image" src="https://github.com/user-attachments/assets/5201ff4d-053d-49ff-8f4b-18a89d372312" /> |
+| *Streamlined checkout with search & categorization* | *Automated change calculation to reduce human error* |
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+| **Inventory Management** | **Sales Reports & Analytics** |
+|:---:|:---:|
+| <img width="1280" height="676" alt="image" src="https://github.com/user-attachments/assets/da268676-a4f8-4fcb-9693-e4c07a3a0ca8" /> | <img width="1280" height="677" alt="image" src="https://github.com/user-attachments/assets/6fd72954-ffec-4dda-9a9d-52adbea19ac2" /> |
+| *Full control over product stock and pricing* | *Detailed transaction logs and revenue tracking* |
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+---
 
-### `npm run eject`
+### 🏗️ Tech Stack
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+* **Frontend:** React.js (Hooks, Context API), Styled Components.
+* **Backend:** Node.js, Express.js (RESTful API).
+* **Database:** MongoDB (Complex relationships between Sales, Products, and Users).
+* **Tools:** Git, GitHub, Postman (API Testing).
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+---
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
